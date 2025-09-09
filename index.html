@@ -1,192 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Durga Puja Club Dashboard</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  .list-item:hover { background-color: #f3f4f6; }
-  .btn { transition: all 0.2s; }
-  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-  .truncate-details { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .icon-btn { cursor: pointer; font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; transition: 0.2s; }
-  .icon-btn:hover { background-color: #e5e7eb; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Durga Puja Dashboard</title>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f7f7f7; }
+    .container { max-width: 1200px; margin: auto; padding: 20px; }
+    h1 { text-align: center; margin-bottom: 20px; }
+    section { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    ul { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; }
+    li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; }
+    input { padding: 5px; margin-right: 5px; }
+    button { padding: 5px 10px; margin-left: 5px; border: none; border-radius: 4px; cursor: pointer; }
+    .edit-btn { background: orange; color: white; }
+    .delete-btn { background: red; color: white; }
+    .add-btn { background: green; color: white; }
+    .chart-container { width: 100%; height: 300px; }
+    .hidden { display: none; }
+  </style>
 </head>
-<body class="bg-gray-50 p-4 font-sans">
-<header class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
-  <h1 class="text-3xl font-bold">Durga Puja Club — Dashboard</h1>
-  <div class="flex gap-2">
-    <button onclick="exportCSV()" class="btn px-3 py-2 bg-indigo-600 text-white rounded-md shadow-sm">Export CSV</button>
-    <button onclick="window.print()" class="btn px-3 py-2 bg-green-600 text-white rounded-md shadow-sm">Export PDF</button>
-  </div>
-</header>
+<body>
+  <div class="container">
+    <h1>Durga Puja Dashboard</h1>
 
-<section class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sticky top-0 z-10 bg-gray-50 p-4 rounded-lg shadow">
-  <div class="text-center bg-yellow-50 p-4 rounded-lg shadow">
-    <div class="text-sm text-gray-600">Total Income</div>
-    <div class="text-xl font-semibold" id="totalIncome"></div>
-  </div>
-  <div class="text-center bg-yellow-50 p-4 rounded-lg shadow">
-    <div class="text-sm text-gray-600">Total Expenses</div>
-    <div class="text-xl font-semibold" id="totalExpenses"></div>
-  </div>
-  <div class="text-center bg-yellow-50 p-4 rounded-lg shadow">
-    <div class="text-sm text-gray-600">Balance</div>
-    <div class="text-xl font-semibold" id="balance"></div>
-  </div>
-</section>
-
-<div class="grid lg:grid-cols-2 gap-6">
-<main>
-  <!-- Members -->
-  <section class="bg-white p-4 rounded-lg shadow mb-6">
-    <h2 class="text-lg font-semibold mb-3">Members Contribution</h2>
-    <ul id="membersList" class="divide-y max-h-48 overflow-auto"></ul>
-    <div class="flex gap-2 mt-3 flex-wrap">
-      <input id="memberName" placeholder="Name" class="flex-1 px-3 py-2 border rounded-md" />
-      <input id="memberAmount" placeholder="Amount" type="number" class="w-28 px-3 py-2 border rounded-md" />
-      <button onclick="addMember()" class="btn px-3 py-2 bg-indigo-600 text-white rounded-md">Add</button>
+    <div id="login-section">
+      <h2>Login</h2>
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button id="login-btn">Login</button>
+      <p id="login-error" style="color:red;"></p>
     </div>
-    <canvas id="membersChart" class="mt-4"></canvas>
-  </section>
 
-  <!-- Other Income -->
-  <section class="bg-white p-4 rounded-lg shadow mb-6">
-    <h2 class="text-lg font-semibold mb-3">Other Income (Advertisement, Donations, Sponsorship)</h2>
-    <ul id="incomeList" class="divide-y max-h-48 overflow-auto"></ul>
-    <div class="flex gap-2 mt-3 flex-wrap">
-      <input id="incomeSource" placeholder="Source" class="px-3 py-2 border rounded-md flex-1" />
-      <input id="incomeAmount" placeholder="Amount" type="number" class="w-28 px-3 py-2 border rounded-md" />
-      <input id="incomeDetails" placeholder="Details" class="px-3 py-2 border rounded-md flex-1" />
-      <button onclick="addIncome()" class="btn px-3 py-2 bg-indigo-600 text-white rounded-md">Add</button>
+    <div id="dashboard" class="hidden">
+      <!-- Summary -->
+      <section>
+        <h2>Summary</h2>
+        <p>Total Income: ₹<span id="total-income">0</span></p>
+        <p>Total Expenses: ₹<span id="total-expense">0</span></p>
+        <p>Balance: ₹<span id="balance">0</span></p>
+      </section>
+
+      <!-- Members Contribution -->
+      <section>
+        <h2>Members Contribution</h2>
+        <ul id="members-list"></ul>
+        <div id="members-form">
+          <input type="text" id="member-name" placeholder="Name" />
+          <input type="number" id="member-amount" placeholder="Amount" />
+          <button class="add-btn" id="add-member">Add</button>
+        </div>
+      </section>
+
+      <!-- Other Income -->
+      <section>
+        <h2>Other Income (Advertisement, Donation, Sponsorship)</h2>
+        <ul id="income-list"></ul>
+        <div id="income-form">
+          <input type="text" id="income-source" placeholder="Source" />
+          <input type="number" id="income-amount" placeholder="Amount" />
+          <button class="add-btn" id="add-income">Add</button>
+        </div>
+      </section>
+
+      <!-- Expenses -->
+      <section>
+        <h2>Expenses</h2>
+        <ul id="expense-list"></ul>
+        <div id="expense-form">
+          <input type="text" id="expense-item" placeholder="Item" />
+          <input type="number" id="expense-cost" placeholder="Cost" />
+          <button class="add-btn" id="add-expense">Add</button>
+        </div>
+      </section>
+
+      <!-- Charts -->
+      <section>
+        <h2>Charts</h2>
+        <canvas id="income-expense-chart"></canvas>
+      </section>
     </div>
-    <canvas id="incomeChart" class="mt-4"></canvas>
-  </section>
+  </div>
 
-  <!-- Expenses -->
-  <section class="bg-white p-4 rounded-lg shadow">
-    <h2 class="text-lg font-semibold mb-3">Expenses</h2>
-    <ul id="expensesList" class="divide-y max-h-48 overflow-auto"></ul>
-    <div class="flex gap-2 mt-3 flex-wrap">
-      <input id="expenseItem" placeholder="Item" class="px-3 py-2 border rounded-md flex-1" />
-      <input id="expenseCost" placeholder="Cost" type="number" class="w-28 px-3 py-2 border rounded-md" />
-      <input id="expenseDetails" placeholder="Details" class="px-3 py-2 border rounded-md flex-1" />
-      <button onclick="addExpense()" class="btn px-3 py-2 bg-indigo-600 text-white rounded-md">Add</button>
-    </div>
-    <canvas id="expensesChart" class="mt-4"></canvas>
-  </section>
-</main>
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDO56RHOZ9rGHFo6a4O2hcYw9JLxVdfBwQ",
+      authDomain: "create-3b0f7.firebaseapp.com",
+      projectId: "create-3b0f7",
+      storageBucket: "create-3b0f7.firebasestorage.app",
+      messagingSenderId: "222954978623",
+      appId: "1:222954978623:web:fb52decc4380934998278a",
+      measurementId: "G-TZZ0KCEB1Z"
+    };
 
-<aside>
-<section class="bg-white p-4 rounded-lg shadow mb-6">
-  <h2 class="text-lg font-semibold mb-3">Income vs Expense Trend</h2>
-  <canvas id="trendChart"></canvas>
-</section>
-<section class="bg-white p-4 rounded-lg shadow">
-  <h3 class="font-semibold mb-2">Notes</h3>
-  <p class="text-sm text-gray-600">Add members, other income or expenses with optional details. Use edit ✏️ and delete 🗑️ buttons for adjustments. Charts & totals update automatically. Data is saved in browser.</p>
-</section>
-</aside>
-</div>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-<script>
-let members = JSON.parse(localStorage.getItem("members")) || [];
-let otherIncome = JSON.parse(localStorage.getItem("otherIncome")) || [];
-let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
-let membersChart, incomeChart, expensesChart, trendChart;
+    const YOUR_UID = "6tm3ARsrMwPsyhV5DOqQG3ZqlHv1";
 
-function formatCurrency(n){return '₹'+n.toLocaleString();}
-function saveData(){localStorage.setItem('members',JSON.stringify(members));localStorage.setItem('otherIncome',JSON.stringify(otherIncome));localStorage.setItem('expenses',JSON.stringify(expenses));}
+    const loginSection = document.getElementById('login-section');
+    const dashboard = document.getElementById('dashboard');
+    const loginBtn = document.getElementById('login-btn');
+    const loginError = document.getElementById('login-error');
 
-function renderSummary(){
-  const totalM = members.reduce((s,m)=>s+m.amount,0);
-  const totalO = otherIncome.reduce((s,o)=>s+o.amount,0);
-  const totalI = totalM+totalO;
-  const totalE = expenses.reduce((s,e)=>s+e.cost,0);
-  const bal = totalI - totalE;
-  document.getElementById('totalIncome').innerText=formatCurrency(totalI);
-  document.getElementById('totalExpenses').innerText=formatCurrency(totalE);
-  document.getElementById('balance').innerText=formatCurrency(bal);
-  document.getElementById('balance').className='text-xl font-semibold '+(bal>=0?'text-green-600':'text-red-600');
-}
+    // Elements
+    const membersList = document.getElementById('members-list');
+    const incomeList = document.getElementById('income-list');
+    const expenseList = document.getElementById('expense-list');
 
-function renderLists(){
-  document.getElementById('membersList').innerHTML = members.map((m,i)=>
-    `<li class='py-2 flex justify-between items-center list-item'>
-      <span>${m.name}</span>
-      <span>${formatCurrency(m.amount)}</span>
-      <div class='flex gap-2'>
-        <span class='icon-btn text-blue-500' onclick='editMember(${i})'>✏️</span>
-        <span class='icon-btn text-red-500' onclick='deleteMember(${i})'>🗑️</span>
-      </div>
-    </li>`).join('');
+    const memberName = document.getElementById('member-name');
+    const memberAmount = document.getElementById('member-amount');
+    const addMemberBtn = document.getElementById('add-member');
 
-  document.getElementById('incomeList').innerHTML = otherIncome.map((o,i)=>
-    `<li class='py-2 flex justify-between items-center list-item'>
-      <div><div>${o.source}</div><div class='text-xs text-gray-500 truncate-details' title='${o.details||''}'>${o.details||''}</div></div>
-      <span>${formatCurrency(o.amount)}</span>
-      <div class='flex gap-2'>
-        <span class='icon-btn text-blue-500' onclick='editIncome(${i})'>✏️</span>
-        <span class='icon-btn text-red-500' onclick='deleteIncome(${i})'>🗑️</span>
-      </div>
-    </li>`).join('');
+    const incomeSource = document.getElementById('income-source');
+    const incomeAmount = document.getElementById('income-amount');
+    const addIncomeBtn = document.getElementById('add-income');
 
-  document.getElementById('expensesList').innerHTML = expenses.map((e,i)=>
-    `<li class='py-2 flex justify-between items-center list-item'>
-      <div><div>${e.item}</div><div class='text-xs text-gray-500 truncate-details' title='${e.details||''}'>${e.details||''}</div></div>
-      <span>${formatCurrency(e.cost)}</span>
-      <div class='flex gap-2'>
-        <span class='icon-btn text-blue-500' onclick='editExpense(${i})'>✏️</span>
-        <span class='icon-btn text-red-500' onclick='deleteExpense(${i})'>🗑️</span>
-      </div>
-    </li>`).join('');
-}
+    const expenseItem = document.getElementById('expense-item');
+    const expenseCost = document.getElementById('expense-cost');
+    const addExpenseBtn = document.getElementById('add-expense');
 
-function deleteMember(i){members.splice(i,1);updateAll();}
-function deleteIncome(i){otherIncome.splice(i,1);updateAll();}
-function deleteExpense(i){expenses.splice(i,1);updateAll();}
+    const totalIncomeEl = document.getElementById('total-income');
+    const totalExpenseEl = document.getElementById('total-expense');
+    const balanceEl = document.getElementById('balance');
 
-function editMember(i){let n=prompt('Edit Name:',members[i].name);let a=prompt('Edit Amount:',members[i].amount);if(n&&!isNaN(a)){members[i]={name:n,amount:parseInt(a,10)};updateAll();}}
-function editIncome(i){let s=prompt('Edit Source:',otherIncome[i].source);let a=prompt('Edit Amount:',otherIncome[i].amount);let d=prompt('Edit Details:',otherIncome[i].details||'');if(s&&!isNaN(a)){otherIncome[i]={source:s,amount:parseInt(a,10),details:d};updateAll();}}
-function editExpense(i){let item=prompt('Edit Item:',expenses[i].item);let c=prompt('Edit Cost:',expenses[i].cost);let d=prompt('Edit Details:',expenses[i].details||'');if(item&&!isNaN(c)){expenses[i]={item,cost:parseInt(c,10),details:d};updateAll();}}
+    let currentUser = null;
+    let incomeExpenseChart;
 
-function updateAll(){renderSummary();renderLists();renderCharts();saveData();}
+    loginBtn.addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        currentUser = userCredential.user;
+        loginSection.classList.add('hidden');
+        dashboard.classList.remove('hidden');
+        initDashboard();
+      } catch(e) {
+        loginError.textContent = e.message;
+      }
+    });
 
-function addMember(){let n=document.getElementById('memberName').value.trim(),a=parseInt(document.getElementById('memberAmount').value,10);if(n&&a>0) members.push({name:n,amount:a});document.getElementById('memberName').value='';document.getElementById('memberAmount').value='';updateAll();}
-function addIncome(){let s=document.getElementById('incomeSource').value.trim(),a=parseInt(document.getElementById('incomeAmount').value,10),d=document.getElementById('incomeDetails').value.trim();if(s&&a>0) otherIncome.push({source:s,amount:a,details:d});document.getElementById('incomeSource').value='';document.getElementById('incomeAmount').value='';document.getElementById('incomeDetails').value='';updateAll();}
-function addExpense(){let i=document.getElementById('expenseItem').value.trim(),c=parseInt(document.getElementById('expenseCost').value,10),d=document.getElementById('expenseDetails').value.trim();if(i&&c>0) expenses.push({item:i,cost:c,details:d});document.getElementById('expenseItem').value='';document.getElementById('expenseCost').value='';document.getElementById('expenseDetails').value='';updateAll();}
+    function initDashboard() {
+      // Members
+      db.collection('members').onSnapshot(snapshot => {
+        membersList.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement('li');
+          li.textContent = `${data.name}: ₹${data.amount}`;
+          if(currentUser.uid === YOUR_UID){
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.className = 'edit-btn';
+            editBtn.onclick = () => editMember(doc.id, data);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = () => db.collection('members').doc(doc.id).delete();
+            li.appendChild(editBtn);
+            li.appendChild(deleteBtn);
+          }
+          membersList.appendChild(li);
+        });
+        updateSummary();
+        updateCharts();
+      });
 
-function renderCharts(){
-  if(membersChart) membersChart.destroy();
-  membersChart=new Chart(document.getElementById('membersChart'),{type:'bar',data:{labels:members.map(m=>m.name),datasets:[{label:'Contribution',data:members.map(m=>m.amount),backgroundColor:'#0088FE'}]}});
-  if(incomeChart) incomeChart.destroy();
-  incomeChart=new Chart(document.getElementById('incomeChart'),{type:'pie',data:{labels:otherIncome.map(o=>o.source),datasets:[{data:otherIncome.map(o=>o.amount),backgroundColor:['#FF8042','#00C49F','#FFBB28','#0088FE']}]}});
-  if(expensesChart) expensesChart.destroy();
-  expensesChart=new Chart(document.getElementById('expensesChart'),{type:'pie',data:{labels:expenses.map(e=>e.item),datasets:[{data:expenses.map(e=>e.cost),backgroundColor:['#A020F0','#FF4444','#00C49F','#0088FE']}]}});
-  if(trendChart) trendChart.destroy();
-  let cumI=0,cumE=0,data=[];
-  for(let j=0;j<Math.max(members.length,otherIncome.length,expenses.length);j++){if(members[j]) cumI+=members[j].amount;if(otherIncome[j]) cumI+=otherIncome[j].amount;if(expenses[j]) cumE+=expenses[j].cost;data.push({x:`Entry ${j+1}`,income:cumI,expense:cumE});}
-  trendChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:data.map(d=>d.x),datasets:[{label:'Income',data:data.map(d=>d.income),borderColor:'#0088FE',fill:false},{label:'Expense',data:data.map(d=>d.expense),borderColor:'#FF4444',fill:false}]}});
-}
+      // Other Income
+      db.collection('otherIncome').onSnapshot(snapshot => {
+        incomeList.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement('li');
+          li.textContent = `${data.source}: ₹${data.amount}`;
+          if(currentUser.uid === YOUR_UID){
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.className = 'edit-btn';
+            editBtn.onclick = () => editIncome(doc.id, data);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = () => db.collection('otherIncome').doc(doc.id).delete();
+            li.appendChild(editBtn);
+            li.appendChild(deleteBtn);
+          }
+          incomeList.appendChild(li);
+        });
+        updateSummary();
+        updateCharts();
+      });
 
-function exportCSV(){
-  let csv='Section,Name/Item,Amount,Details\n';
-  members.forEach(m=>{csv+=`Member Contribution,${m.name},${m.amount},\n`;});
-  otherIncome.forEach(o=>{csv+=`Other Income,${o.source},${o.amount},${o.details||''}\n`;});
-  expenses.forEach(e=>{csv+=`Expense,${e.item},${e.cost},${e.details||''}\n`;});
-  const totalM = members.reduce((s,m)=>s+m.amount,0);
-  const totalO = otherIncome.reduce((s,o)=>s+o.amount,0);
-  const totalI = totalM+totalO;
-  const totalE = expenses.reduce((s,e)=>s+e.cost,0);
-  csv+=`Summary,Total Income,${totalI},\n`;csv+=`Summary,Total Expense,${totalE},\n`;csv+=`Summary,Balance,${totalI-totalE},\n`;
-  const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='durga_puja_dashboard.csv';a.click();URL.revokeObjectURL(url);
-}
+      // Expenses
+      db.collection('expenses').onSnapshot(snapshot => {
+        expenseList.innerHTML = '';
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const li = document.createElement('li');
+          li.textContent = `${data.item}: ₹${data.cost}`;
+          if(currentUser.uid === YOUR_UID){
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.className = 'edit-btn';
+            editBtn.onclick = () => editExpense(doc.id, data);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = () => db.collection('expenses').doc(doc.id).delete();
+            li.appendChild(editBtn);
+            li.appendChild(deleteBtn);
+          }
+          expenseList.appendChild(li);
+        });
+        updateSummary();
+        updateCharts();
+      });
 
-updateAll();
-</script>
+      // Add functionality
+      addMemberBtn.onclick = () => {
+        if(memberName.value && memberAmount.value) {
+          db.collection('members').add({name: memberName.value, amount: parseInt(memberAmount.value)});
+          memberName.value = ''; memberAmount.value = '';
+        }
+      };
+      addIncomeBtn.onclick = () => {
+        if(incomeSource.value && incomeAmount.value){
+          db.collection('otherIncome').add({source: incomeSource.value, amount: parseInt(incomeAmount.value)});
+          incomeSource.value = ''; incomeAmount.value = '';
+        }
+      };
+      addExpenseBtn.onclick = () => {
+        if(expenseItem.value && expenseCost.value){
+          db.collection('expenses').add({item: expenseItem.value, cost: parseInt(expenseCost.value)});
+          expenseItem.value = ''; expenseCost.value = '';
+        }
+      };
+    }
+
+    function editMember(id, data) {
+      const name = prompt("Edit Name:", data.name);
+      const amount = prompt("Edit Amount:", data.amount);
+      if(name && amount) db.collection('members').doc(id).update({name, amount: parseInt(amount)});
+    }
+    function editIncome(id, data) {
+      const source = prompt("Edit Source:", data.source);
+      const amount = prompt("Edit Amount:", data.amount);
+      if(source && amount) db.collection('otherIncome').doc(id).update({source, amount: parseInt(amount)});
+    }
+    function editExpense(id, data) {
+      const item = prompt("Edit Item:", data.item);
+      const cost = prompt("Edit Cost:", data.cost);
+      if(item && cost) db.collection('expenses').doc(id).update({item, cost: parseInt(cost)});
+    }
+
+    function updateSummary() {
+      let totalIncome = 0;
+      let totalExpense = 0;
+      db.collection('members').get().then(snap => {
+        snap.forEach(doc => totalIncome += doc.data().amount);
+        db.collection('otherIncome').get().then(snap2 => {
+          snap2.forEach(doc => totalIncome += doc.data().amount);
+          db.collection('expenses').get().then(snap3 => {
+            snap3.forEach(doc => totalExpense += doc.data().cost);
+            totalIncomeEl.textContent = totalIncome;
+            totalExpenseEl.textContent = totalExpense;
+            balanceEl.textContent = totalIncome - totalExpense;
+          });
+        });
+      });
+    }
+
+    function updateCharts() {
+      let membersVal = 0, otherVal = 0, expensesVal = 0;
+      db.collection('members').get().then(snap => {
+        snap.forEach(doc => membersVal += doc.data().amount);
+        db.collection('otherIncome').get().then(snap2 => {
+          snap2.forEach(doc => otherVal += doc.data().amount);
+          db.collection('expenses').get().then(snap3 => {
+            snap3.forEach(doc => expensesVal += doc.data().cost);
+            const ctx = document.getElementById('income-expense-chart').getContext('2d');
+            const data = {
+              labels: ['Members', 'Other Income', 'Expenses'],
+              datasets: [{
+                label: '₹ Amount',
+                data: [membersVal, otherVal, expensesVal],
+                backgroundColor: ['#0088FE','#00C49F','#FF4444']
+              }]
+            };
+            if(incomeExpenseChart){
+              incomeExpenseChart.data.datasets[0].data = data.datasets[0].data;
+              incomeExpenseChart.update();
+            } else {
+              incomeExpenseChart = new Chart(ctx, { type: 'bar', data: data, options: { responsive: true, plugins: { legend: { display: false } } }});
+            }
+          });
+        });
+      });
+    }
+
+  </script>
 </body>
 </html>
