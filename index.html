@@ -1,329 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Durga Puja Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Durga Puja Dashboard</title>
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <style>
-    body { font-family: 'Poppins', sans-serif; margin: 0; background: #F7F7F7; }
-    header { background: linear-gradient(90deg, #FF6F61, #FFD166); padding: 20px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    header h1 { margin: 0; font-size: 2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-    .container { max-width: 1200px; margin: auto; padding: 20px; }
-    section.card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
-    section.card:hover { transform: translateY(-5px); }
-    h2 { color: #333; margin-bottom: 10px; }
-    ul { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
-    li { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid #eee; align-items: center; }
-    input { padding: 6px 8px; margin-right: 5px; border-radius: 6px; border: 1px solid #ccc; }
-    button { padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; }
-    .add-btn { background: #06D6A0; color: white; }
-    .edit-btn { background: orange; color: white; margin-left: 5px; }
-    .delete-btn { background: red; color: white; margin-left: 5px; }
-    button:hover { opacity: 0.85; transform: scale(1.05); }
-    .chart-container { width: 100%; height: 300px; margin-top: 20px; }
-    .hidden { display: none; }
-    @media (min-width: 768px) {
-      .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
-      .flex-row > section { flex: 1 1 calc(50% - 20px); }
-    }
-  </style>
+<style>
+body { font-family: 'Poppins', sans-serif; margin: 0; background: #F7F7F7; }
+header { background: linear-gradient(90deg, #FF6F61, #FFD166); padding: 20px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+header h1 { margin: 0; font-size: 2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+.container { max-width: 1200px; margin: auto; padding: 20px; }
+section.card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
+section.card:hover { transform: translateY(-5px); }
+h2 { color: #333; margin-bottom: 10px; }
+ul { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
+li { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid #eee; align-items: center; }
+input { padding: 6px 8px; margin-right: 5px; border-radius: 6px; border: 1px solid #ccc; }
+button { padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; }
+.add-btn { background: #06D6A0; color: white; }
+.edit-btn { background: orange; color: white; margin-left: 5px; }
+.delete-btn { background: red; color: white; margin-left: 5px; }
+button:hover { opacity: 0.85; transform: scale(1.05); }
+.chart-container { width: 100%; height: 300px; margin-top: 20px; }
+.hidden { display: none; }
+.flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
+.flex-row > section { flex: 1 1 calc(50% - 20px); }
+.summary-mini { display:flex; justify-content: space-between; padding:10px; border-radius:8px; background:#FFEBCD; margin-bottom:10px; font-weight:600;}
+</style>
 </head>
 <body>
 
-  <header>
-    <h1>🎉 Durga Puja Club Dashboard 🎉</h1>
-  </header>
+<header>
+  <h1>🎉 Durga Puja Club Dashboard 🎉</h1>
+</header>
 
-  <div class="container">
+<div class="container">
 
-    <div id="login-section">
-      <h2>Login</h2>
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
-      <button id="login-btn">Login</button>
-      <p id="login-error" style="color:red;"></p>
-    </div>
-
-    <div id="dashboard" class="hidden">
-
-      <div class="flex-row">
-        <!-- Summary -->
-        <section class="card">
-          <h2>Summary</h2>
-          <p>Total Income: ₹<span id="total-income">0</span></p>
-          <p>Total Expenses: ₹<span id="total-expense">0</span></p>
-          <p>Balance: ₹<span id="balance">0</span></p>
-        </section>
-
-        <!-- Income vs Expense Chart -->
-        <section class="card">
-          <h2>Income vs Expense Chart</h2>
-          <canvas id="income-expense-chart"></canvas>
-        </section>
-      </div>
-
-      <div class="flex-row">
-        <!-- Members Contribution -->
-        <section class="card">
-          <h2>Members Contribution</h2>
-          <ul id="members-list"></ul>
-          <div id="members-form">
-            <input type="text" id="member-name" placeholder="Name">
-            <input type="number" id="member-amount" placeholder="Amount">
-            <button class="add-btn" id="add-member">➕ Add</button>
-          </div>
-        </section>
-
-        <!-- Other Income -->
-        <section class="card">
-          <h2>Other Income</h2>
-          <ul id="income-list"></ul>
-          <div id="income-form">
-            <input type="text" id="income-source" placeholder="Source">
-            <input type="number" id="income-amount" placeholder="Amount">
-            <button class="add-btn" id="add-income">➕ Add</button>
-          </div>
-        </section>
-
-        <!-- Expenses -->
-        <section class="card">
-          <h2>Expenses</h2>
-          <ul id="expense-list"></ul>
-          <div id="expense-form">
-            <input type="text" id="expense-item" placeholder="Item">
-            <input type="number" id="expense-cost" placeholder="Cost">
-            <button class="add-btn" id="add-expense">➕ Add</button>
-          </div>
-        </section>
-      </div>
-
-    </div>
+  <div id="login-section">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="login-btn">Login</button>
+    <p id="login-error" style="color:red;"></p>
   </div>
 
-  <script>
-    // Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyDO56RHOZ9rGHFo6a4O2hcYw9JLxVdfBwQ",
-      authDomain: "create-3b0f7.firebaseapp.com",
-      projectId: "create-3b0f7",
-      storageBucket: "create-3b0f7.firebasestorage.app",
-      messagingSenderId: "222954978623",
-      appId: "1:222954978623:web:fb52decc4380934998278a",
-      measurementId: "G-TZZ0KCEB1Z"
-    };
+  <div id="dashboard" class="hidden">
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    <div class="flex-row">
+      <section class="card">
+        <h2>Summary</h2>
+        <div class="summary-mini">Total Income: ₹<span id="total-income">0</span></div>
+        <div class="summary-mini">Total Expenses: ₹<span id="total-expense">0</span></div>
+        <div class="summary-mini">Balance: ₹<span id="balance">0</span></div>
+        <div class="summary-mini">Top Contributor: <span id="top-contributor">-</span></div>
+        <div class="summary-mini">Largest Donation: <span id="top-donation">-</span></div>
+        <div class="summary-mini">Highest Expense: <span id="top-expense">-</span></div>
+      </section>
 
-    const YOUR_UID = "6tm3ARsrMwPsyhV5DOqQG3ZqlHv1";
+      <section class="card">
+        <h2>Income vs Expense Trend</h2>
+        <canvas id="trend-chart"></canvas>
+      </section>
+    </div>
 
-    const loginSection = document.getElementById('login-section');
-    const dashboard = document.getElementById('dashboard');
-    const loginBtn = document.getElementById('login-btn');
-    const loginError = document.getElementById('login-error');
+    <div class="flex-row">
+      <section class="card">
+        <h2>Members Contribution</h2>
+        <ul id="members-list"></ul>
+        <div id="members-form">
+          <input type="text" id="member-name" placeholder="Name">
+          <input type="number" id="member-amount" placeholder="Amount">
+          <button class="add-btn" id="add-member">➕ Add</button>
+        </div>
+        <div class="chart-container">
+          <canvas id="members-chart"></canvas>
+        </div>
+      </section>
 
-    // Elements
-    const membersList = document.getElementById('members-list');
-    const incomeList = document.getElementById('income-list');
-    const expenseList = document.getElementById('expense-list');
+      <section class="card">
+        <h2>Other Income</h2>
+        <ul id="income-list"></ul>
+        <div id="income-form">
+          <input type="text" id="income-source" placeholder="Source">
+          <input type="number" id="income-amount" placeholder="Amount">
+          <button class="add-btn" id="add-income">➕ Add</button>
+        </div>
+        <div class="chart-container">
+          <canvas id="income-chart"></canvas>
+        </div>
+      </section>
 
-    const memberName = document.getElementById('member-name');
-    const memberAmount = document.getElementById('member-amount');
-    const addMemberBtn = document.getElementById('add-member');
+      <section class="card">
+        <h2>Expenses</h2>
+        <ul id="expense-list"></ul>
+        <div id="expense-form">
+          <input type="text" id="expense-item" placeholder="Item">
+          <input type="number" id="expense-cost" placeholder="Cost">
+          <button class="add-btn" id="add-expense">➕ Add</button>
+        </div>
+        <div class="chart-container">
+          <canvas id="expense-chart"></canvas>
+        </div>
+      </section>
+    </div>
 
-    const incomeSource = document.getElementById('income-source');
-    const incomeAmount = document.getElementById('income-amount');
-    const addIncomeBtn = document.getElementById('add-income');
+  </div>
+</div>
 
-    const expenseItem = document.getElementById('expense-item');
-    const expenseCost = document.getElementById('expense-cost');
-    const addExpenseBtn = document.getElementById('add-expense');
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDO56RHOZ9rGHFo6a4O2hcYw9JLxVdfBwQ",
+  authDomain: "create-3b0f7.firebaseapp.com",
+  projectId: "create-3b0f7",
+  storageBucket: "create-3b0f7.firebasestorage.app",
+  messagingSenderId: "222954978623",
+  appId: "1:222954978623:web:fb52decc4380934998278a",
+  measurementId: "G-TZZ0KCEB1Z"
+};
 
-    const totalIncomeEl = document.getElementById('total-income');
-    const totalExpenseEl = document.getElementById('total-expense');
-    const balanceEl = document.getElementById('balance');
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const YOUR_UID = "6tm3ARsrMwPsyhV5DOqQG3ZqlHv1";
 
-    let currentUser = null;
-    let incomeExpenseChart;
+const loginSection = document.getElementById('login-section');
+const dashboard = document.getElementById('dashboard');
+const loginBtn = document.getElementById('login-btn');
+const loginError = document.getElementById('login-error');
 
-    loginBtn.addEventListener('click', async () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        currentUser = userCredential.user;
-        loginSection.classList.add('hidden');
-        dashboard.classList.remove('hidden');
-        initDashboard();
-      } catch(e) {
-        loginError.textContent = e.message;
-      }
-    });
+const membersList = document.getElementById('members-list');
+const incomeList = document.getElementById('income-list');
+const expenseList = document.getElementById('expense-list');
 
-    function initDashboard() {
-      // Members
-      db.collection('members').onSnapshot(snapshot => {
-        membersList.innerHTML = '';
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const li = document.createElement('li');
-          li.textContent = `${data.name}: ₹${data.amount}`;
-          if(currentUser.uid === YOUR_UID){
-            const editBtn = document.createElement('button');
-            editBtn.textContent = '🖉';
-            editBtn.className = 'edit-btn';
-            editBtn.onclick = () => editMember(doc.id, data);
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = '🗑️';
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.onclick = () => db.collection('members').doc(doc.id).delete();
-            li.appendChild(editBtn);
-            li.appendChild(deleteBtn);
-          }
-          membersList.appendChild(li);
-        });
-        updateSummary();
-        updateCharts();
-      });
+const memberName = document.getElementById('member-name');
+const memberAmount = document.getElementById('member-amount');
+const addMemberBtn = document.getElementById('add-member');
 
-      // Other Income
-      db.collection('otherIncome').onSnapshot(snapshot => {
-        incomeList.innerHTML = '';
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const li = document.createElement('li');
-          li.textContent = `${data.source}: ₹${data.amount}`;
-          if(currentUser.uid === YOUR_UID){
-            const editBtn = document.createElement('button');
-            editBtn.textContent = '🖉';
-            editBtn.className = 'edit-btn';
-            editBtn.onclick = () => editIncome(doc.id, data);
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = '🗑️';
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.onclick = () => db.collection('otherIncome').doc(doc.id).delete();
-            li.appendChild(editBtn);
-            li.appendChild(deleteBtn);
-          }
-          incomeList.appendChild(li);
-        });
-        updateSummary();
-        updateCharts();
-      });
+const incomeSource = document.getElementById('income-source');
+const incomeAmount = document.getElementById('income-amount');
+const addIncomeBtn = document.getElementById('add-income');
 
-      // Expenses
-      db.collection('expenses').onSnapshot(snapshot => {
-        expenseList.innerHTML = '';
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const li = document.createElement('li');
-          li.textContent = `${data.item}: ₹${data.cost}`;
-          if(currentUser.uid === YOUR_UID){
-            const editBtn = document.createElement('button');
-            editBtn.textContent = '🖉';
-            editBtn.className = 'edit-btn';
-            editBtn.onclick = () => editExpense(doc.id, data);
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = '🗑️';
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.onclick = () => db.collection('expenses').doc(doc.id).delete();
-            li.appendChild(editBtn);
-            li.appendChild(deleteBtn);
-          }
-          expenseList.appendChild(li);
-        });
-        updateSummary();
-        updateCharts();
-      });
+const expenseItem = document.getElementById('expense-item');
+const expenseCost = document.getElementById('expense-cost');
+const addExpenseBtn = document.getElementById('add-expense');
 
-      // Add new entries
-      addMemberBtn.onclick = () => {
-        if(memberName.value && memberAmount.value){
-          db.collection('members').add({name: memberName.value, amount: parseInt(memberAmount.value)});
-          memberName.value = ''; memberAmount.value = '';
-        }
-      };
-      addIncomeBtn.onclick = () => {
-        if(incomeSource.value && incomeAmount.value){
-          db.collection('otherIncome').add({source: incomeSource.value, amount: parseInt(incomeAmount.value)});
-          incomeSource.value = ''; incomeAmount.value = '';
-        }
-      };
-      addExpenseBtn.onclick = () => {
-        if(expenseItem.value && expenseCost.value){
-          db.collection('expenses').add({item: expenseItem.value, cost: parseInt(expenseCost.value)});
-          expenseItem.value = ''; expenseCost.value = '';
-        }
-      };
-    }
+const totalIncomeEl = document.getElementById('total-income');
+const totalExpenseEl = document.getElementById('total-expense');
+const balanceEl = document.getElementById('balance');
+const topContributorEl = document.getElementById('top-contributor');
+const topDonationEl = document.getElementById('top-donation');
+const topExpenseEl = document.getElementById('top-expense');
 
-    function editMember(id, data){
-      const name = prompt("Edit Name:", data.name);
-      const amount = prompt("Edit Amount:", data.amount);
-      if(name && amount) db.collection('members').doc(id).update({name, amount: parseInt(amount)});
-    }
-    function editIncome(id, data){
-      const source = prompt("Edit Source:", data.source);
-      const amount = prompt("Edit Amount:", data.amount);
-      if(source && amount) db.collection('otherIncome').doc(id).update({source, amount: parseInt(amount)});
-    }
-    function editExpense(id, data){
-      const item = prompt("Edit Item:", data.item);
-      const cost = prompt("Edit Cost:", data.cost);
-      if(item && cost) db.collection('expenses').doc(id).update({item, cost: parseInt(cost)});
-    }
+let currentUser = null;
+let membersChart, incomeChart, expenseChart, trendChart;
 
-    function updateSummary(){
-      let totalIncome=0, totalExpense=0;
-      db.collection('members').get().then(snap => {
-        snap.forEach(doc => totalIncome += doc.data().amount);
-        db.collection('otherIncome').get().then(snap2 => {
-          snap2.forEach(doc => totalIncome += doc.data().amount);
-          db.collection('expenses').get().then(snap3 => {
-            snap3.forEach(doc => totalExpense += doc.data().cost);
-            totalIncomeEl.textContent = totalIncome;
-            totalExpenseEl.textContent = totalExpense;
-            balanceEl.textContent = totalIncome - totalExpense;
-          });
-        });
-      });
-    }
+loginBtn.addEventListener('click', async () => {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  try {
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    currentUser = userCredential.user;
+    loginSection.classList.add('hidden');
+    dashboard.classList.remove('hidden');
+    initDashboard();
+  } catch(e) {
+    loginError.textContent = e.message;
+  }
+});
 
-    function updateCharts(){
-      let membersVal=0, otherVal=0, expensesVal=0;
-      db.collection('members').get().then(snap=>{
-        snap.forEach(doc=>membersVal+=doc.data().amount);
-        db.collection('otherIncome').get().then(snap2=>{
-          snap2.forEach(doc=>otherVal+=doc.data().amount);
-          db.collection('expenses').get().then(snap3=>{
-            snap3.forEach(doc=>expensesVal+=doc.data().cost);
-            const ctx=document.getElementById('income-expense-chart').getContext('2d');
-            const data={labels:['Members','Other Income','Expenses'],datasets:[{label:'₹ Amount',data:[membersVal,otherVal,expensesVal],backgroundColor:['#FF6F61','#FFD166','#06D6A0']}]};
-            if(incomeExpenseChart){
-              incomeExpenseChart.data.datasets[0].data = data.datasets[0].data;
-              incomeExpenseChart.update();
-            } else {
-              incomeExpenseChart=new Chart(ctx,{type:'bar',data:data,options:{responsive:true,plugins:{legend:{display:false}}}});
-            }
-          });
-        });
-      });
-    }
-
-  </script>
-
-</body>
-</html>
+// Helper: generate random pastel colors for charts
+function randomColor(i){ const colors=["#FF6F61","#FFD166","#06D6A0","#4D96FF","#FF6FFF","#FFA500"]; return colors[i%colors
