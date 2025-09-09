@@ -165,6 +165,7 @@ const topExpenseEl = document.getElementById('top-expense');
 let currentUser = null;
 let membersChart, incomeChart, expenseChart, trendChart;
 
+// Login
 loginBtn.addEventListener('click', async () => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
@@ -179,111 +180,145 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
-// Helper: random colors
-function randomColor(i){ const colors=["#FF6F61","#FFD166","#06D6A0","#4D96FF","#FF6FFF","#FFA500"]; return colors[i%colors.length]; }
+// Dashboard init
+function initDashboard() {
 
-function initDashboard(){
+  // Helper random color
+  function randomColor(i){ const colors=["#FF6F61","#FFD166","#06D6A0","#4D96FF","#FF6FFF","#FFA500"]; return colors[i%colors.length]; }
 
-  // Real-time listeners
-  db.collection('members').orderBy('createdAt').onSnapshot(snapshot => {
-    membersList.innerHTML=''; let membersData=[]; let total=0; let top=0; let topName='-';
+  // Firestore listeners
+  db.collection('members').orderBy('createdAt').onSnapshot(snapshot=>{
+    membersList.innerHTML=''; let total=0; let top=0; let topName='-'; let labels=[], data=[];
     snapshot.forEach(doc=>{
-      const data=doc.data(); total+=data.amount;
-      if(data.amount>top){top=data.amount; topName=data.name;}
-      const li=document.createElement('li'); li.textContent=`${data.name} - ₹${data.amount}`;
+      const d=doc.data(); total+=d.amount; labels.push(d.name); data.push(d.amount); if(d.amount>top){top=d.amount; topName=d.name;}
+      const li=document.createElement('li'); li.textContent=`${d.name} - ₹${d.amount}`;
       if(currentUser.uid===YOUR_UID){
         const edit=document.createElement('button'); edit.textContent='✏️'; edit.className='edit-btn';
-        edit.onclick=()=>{ const newAmt=prompt("Enter new amount",data.amount); if(newAmt){db.collection('members').doc(doc.id).update({amount:parseInt(newAmt)})}};
+        edit.onclick=()=>{ const newAmt=prompt("Enter new amount",d.amount); if(newAmt){db.collection('members').doc(doc.id).update({amount:parseInt(newAmt)})}};
         const del=document.createElement('button'); del.textContent='🗑'; del.className='delete-btn';
         del.onclick=()=>{db.collection('members').doc(doc.id).delete()};
         li.appendChild(edit); li.appendChild(del);
       }
-      membersList.appendChild(li); membersData.push(data.amount);
+      membersList.appendChild(li);
     });
-    totalIncomeEl.textContent=total;
-    topContributorEl.textContent=topName;
-    updateChart(membersChart,'members-chart',snapshot.docs.map(d=>d.data().name),membersData);
+    totalIncomeEl.textContent = total;
+    topContributorEl.textContent = topName;
+    if(membersChart) membersChart.destroy();
+    const ctx=document.getElementById('members-chart').getContext('2d');
+    membersChart = new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true}});
     updateTrendChart();
   });
 
-  db.collection('otherIncome').orderBy('createdAt').onSnapshot(snapshot => {
-    incomeList.innerHTML=''; let dataVals=[]; let total=0; let top=0; let topName='-';
+  db.collection('otherIncome').orderBy('createdAt').onSnapshot(snapshot=>{
+    incomeList.innerHTML=''; let total=0; let top=0; let topName='-'; let labels=[], data=[];
     snapshot.forEach(doc=>{
-      const data=doc.data(); total+=data.amount; if(data.amount>top){top=data.amount; topName=data.source;}
-      const li=document.createElement('li'); li.textContent=`${data.source} - ₹${data.amount}`;
+      const d=doc.data(); total+=d.amount; labels.push(d.source); data.push(d.amount); if(d.amount>top){top=d.amount; topName=d.source;}
+      const li=document.createElement('li'); li.textContent=`${d.source} - ₹${d.amount}`;
       if(currentUser.uid===YOUR_UID){
         const edit=document.createElement('button'); edit.textContent='✏️'; edit.className='edit-btn';
-        edit.onclick=()=>{ const newAmt=prompt("Enter new amount",data.amount); if(newAmt){db.collection('otherIncome').doc(doc.id).update({amount:parseInt(newAmt)})}};
+        edit.onclick=()=>{ const newAmt=prompt("Enter new amount",d.amount); if(newAmt){db.collection('otherIncome').doc(doc.id).update({amount:parseInt(newAmt)})}};
         const del=document.createElement('button'); del.textContent='🗑'; del.className='delete-btn';
         del.onclick=()=>{db.collection('otherIncome').doc(doc.id).delete()};
         li.appendChild(edit); li.appendChild(del);
       }
-      incomeList.appendChild(li); dataVals.push(data.amount);
+      incomeList.appendChild(li);
     });
-    totalIncomeEl.textContent=parseInt(totalIncomeEl.textContent)+total;
-    topDonationEl.textContent=topName;
-    updateChart(incomeChart,'income-chart',snapshot.docs.map(d=>d.data().source),dataVals);
+    if(incomeChart) incomeChart.destroy();
+    const ctx=document.getElementById('income-chart').getContext('2d');
+    incomeChart = new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true}});
     updateTrendChart();
   });
 
-  db.collection('expenses').orderBy('createdAt').onSnapshot(snapshot => {
-    expenseList.innerHTML=''; let dataVals=[]; let total=0; let top=0; let topName='-';
+  db.collection('expenses').orderBy('createdAt').onSnapshot(snapshot=>{
+    expenseList.innerHTML=''; let total=0; let top=0; let topName='-'; let labels=[], data=[];
     snapshot.forEach(doc=>{
-      const data=doc.data(); total+=data.cost; if(data.cost>top){top=data.cost; topName=data.item;}
-      const li=document.createElement('li'); li.textContent=`${data.item} - ₹${data.cost}`;
+      const d=doc.data(); total+=d.cost; labels.push(d.item); data.push(d.cost); if(d.cost>top){top=d.cost; topName=d.item;}
+      const li=document.createElement('li'); li.textContent=`${d.item} - ₹${d.cost}`;
       if(currentUser.uid===YOUR_UID){
         const edit=document.createElement('button'); edit.textContent='✏️'; edit.className='edit-btn';
-        edit.onclick=()=>{ const newAmt=prompt("Enter new cost",data.cost); if(newAmt){db.collection('expenses').doc(doc.id).update({cost:parseInt(newAmt)})}};
+        edit.onclick=()=>{ const newAmt=prompt("Enter new cost",d.cost); if(newAmt){db.collection('expenses').doc(doc.id).update({cost:parseInt(newAmt)})}};
         const del=document.createElement('button'); del.textContent='🗑'; del.className='delete-btn';
         del.onclick=()=>{db.collection('expenses').doc(doc.id).delete()};
         li.appendChild(edit); li.appendChild(del);
       }
-      expenseList.appendChild(li); dataVals.push(data.cost);
+      expenseList.appendChild(li);
     });
-    totalExpenseEl.textContent=total;
-    topExpenseEl.textContent=topName;
-    updateChart(expenseChart,'expense-chart',snapshot.docs.map(d=>d.data().item),dataVals);
+    totalExpenseEl.textContent = total;
+    topExpenseEl.textContent = topName;
+    if(expenseChart) expenseChart.destroy();
+    const ctx=document.getElementById('expense-chart').getContext('2d');
+    expenseChart = new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true}});
     updateTrendChart();
   });
+
 }
 
 // Add entries
-addMemberBtn.onclick=()=>{if(currentUser.uid===YOUR_UID){if(memberName.value && memberAmount.value){db.collection('members').add({name:memberName.value,amount:parseInt(memberAmount.value),createdAt:firebase.firestore.FieldValue.serverTimestamp()}); memberName.value=''; memberAmount.value='';}}};
-addIncomeBtn.onclick=()=>{if(currentUser.uid===YOUR_UID){if(incomeSource.value && incomeAmount.value){db.collection('otherIncome').add({source:incomeSource.value,amount:parseInt(incomeAmount.value),createdAt:firebase.firestore.FieldValue.serverTimestamp()}); incomeSource.value=''; incomeAmount.value='';}}};
-addExpenseBtn.onclick=()=>{if(currentUser.uid===YOUR_UID){if(expenseItem.value && expenseCost.value){db.collection('expenses').add({item:expenseItem.value,cost:parseInt(expenseCost.value),createdAt:firebase.firestore.FieldValue.serverTimestamp()}); expenseItem.value=''; expenseCost.value='';}}};
-
-// Chart helpers
-function updateChart(chartObj,canvasId,labels,data){
-  if(chartObj) chartObj.destroy();
-  const ctx=document.getElementById(canvasId).getContext('2d');
-  chartObj=new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true, plugins:{legend:{display:false}}}});
-  if(canvasId==='members-chart') membersChart=chartObj;
-  else if(canvasId==='income-chart') incomeChart=chartObj;
-  else if(canvasId==='expense-chart') expenseChart=chartObj;
-}
+addMemberBtn.onclick = () => {
+  if(currentUser.uid===YOUR_UID && memberName.value && memberAmount.value){
+    db.collection('members').add({
+      name: memberName.value,
+      amount: parseInt(memberAmount.value),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    memberName.value=''; memberAmount.value='';
+  }
+};
+addIncomeBtn.onclick = () => {
+  if(currentUser.uid===YOUR_UID && incomeSource.value && incomeAmount.value){
+    db.collection('otherIncome').add({
+      source: incomeSource.value,
+      amount: parseInt(incomeAmount.value),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    incomeSource.value=''; incomeAmount.value='';
+  }
+};
+addExpenseBtn.onclick = () => {
+  if(currentUser.uid===YOUR_UID && expenseItem.value && expenseCost.value){
+    db.collection('expenses').add({
+      item: expenseItem.value,
+      cost: parseInt(expenseCost.value),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    expenseItem.value=''; expenseCost.value='';
+  }
+};
 
 // Trend chart
 function updateTrendChart(){
-  db.collection('members').orderBy('createdAt').get().then(memSnap=>{
-    db.collection('otherIncome').orderBy('createdAt').get().then(incSnap=>{
-      db.collection('expenses').orderBy('createdAt').get().then(expSnap=>{
-        let labels=[], income=[], expense=[], cumIncome=0, cumExpense=0;
-        const maxLen=Math.max(memSnap.size,incSnap.size,expSnap.size);
-        for(let i=0;i<maxLen;i++){
-          if(memSnap.docs[i]) cumIncome+=memSnap.docs[i].data().amount;
-          if(incSnap.docs[i]) cumIncome+=incSnap.docs[i].data().amount;
-          if(expSnap.docs[i]) cumExpense+=expSnap.docs[i].data().cost;
-          labels.push(`Entry ${i+1}`);
-          income.push(cumIncome);
-          expense.push(cumExpense);
-        }
-        if(trendChart) trendChart.destroy();
-        const ctx=document.getElementById('trend-chart').getContext('2d');
-        trendChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Income',data:income,borderColor:'#06D6A0',tension:0.4,fill:false},{label:'Expense',data:expense,borderColor:'#FF6F61',tension:0.4,fill:false}]},options:{responsive:true}});
-      });
+  Promise.all([
+    db.collection('members').orderBy('createdAt').get(),
+    db.collection('otherIncome').orderBy('createdAt').get(),
+    db.collection('expenses').orderBy('createdAt').get()
+  ]).then(([memSnap, incSnap, expSnap])=>{
+    let labels=[], income=[], expense=[], cumIncome=0, cumExpense=0;
+    const maxLen = Math.max(memSnap.size, incSnap.size, expSnap.size);
+    for(let i=0;i<maxLen;i++){
+      if(memSnap.docs[i]) cumIncome+=memSnap.docs[i].data().amount;
+      if(incSnap.docs[i]) cumIncome+=incSnap.docs[i].data().amount;
+      if(expSnap.docs[i]) cumExpense+=expSnap.docs[i].data().cost;
+      labels.push(`Entry ${i+1}`);
+      income.push(cumIncome);
+      expense.push(cumExpense);
+    }
+    if(trendChart) trendChart.destroy();
+    const ctx=document.getElementById('trend-chart').getContext('2d');
+    trendChart = new Chart(ctx,{
+      type:'line',
+      data:{labels,datasets:[
+        {label:'Income',data:income,borderColor:'#06D6A0',tension:0.4,fill:false},
+        {label:'Expense',data:expense,borderColor:'#FF6F61',tension:0.4,fill:false}
+      ]},
+      options:{responsive:true}
     });
+    // update summary totals
+    totalIncomeEl.textContent = income[income.length-1] || 0;
+    totalExpenseEl.textContent = expense[expense.length-1] || 0;
+    balanceEl.textContent = (income[income.length-1] || 0) - (expense[expense.length-1] || 0);
   });
 }
 </script>
+
 </body>
 </html>
