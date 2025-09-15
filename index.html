@@ -21,6 +21,30 @@
     #edit-box input, #edit-box textarea, #edit-box select { width: 100%; margin: 5px 0; padding: 6px; }
     .btn-row { display: flex; justify-content: space-between; margin-top: 10px; }
     .btn-row button { flex: 1; margin: 0 4px; padding: 8px; }
+
+    /* ✅ Toast styling */
+    #toast {
+      visibility: hidden;
+      min-width: 250px;
+      margin-left: -125px;
+      background-color: #323232;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 12px;
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      bottom: 30px;
+      font-size: 16px;
+      opacity: 0;
+      transition: opacity 0.5s ease, bottom 0.5s ease;
+    }
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+      bottom: 50px;
+    }
   </style>
 </head>
 <body>
@@ -55,6 +79,9 @@
     </div>
   </div>
 
+  <!-- ✅ Toast notification -->
+  <div id="toast"></div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
   import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -75,6 +102,7 @@
   const membersList = document.getElementById("members-list");
   const incomeList = document.getElementById("income-list");
   const expensesList = document.getElementById("expenses-list");
+  const toast = document.getElementById("toast");
 
   // Modal elements
   const editModal = document.getElementById("edit-modal");
@@ -89,6 +117,12 @@
 
   let currentDoc = null;
   let currentType = null;
+
+  function showToast(message) {
+    toast.textContent = message;
+    toast.className = "show";
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2500);
+  }
 
   function createListItem(docSnap, type) {
     const data = docSnap.data();
@@ -114,6 +148,7 @@
     del.onclick = async () => {
       if (confirm("Delete this entry?")) {
         await deleteDoc(docSnap.ref);
+        showToast("🗑️ Deleted successfully!");
       }
     };
 
@@ -187,6 +222,7 @@
 
     await updateDoc(currentDoc.ref, updatedData);
     editModal.classList.add("hidden");
+    showToast("✅ Updated successfully!");
   };
 
   // Realtime listeners
