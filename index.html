@@ -1,261 +1,210 @@
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDO56RHOZ9rGHFo6a4O2hcYw9JLxVdfBwQ",
-  authDomain: "create-3b0f7.firebaseapp.com",
-  projectId: "create-3b0f7",
-  storageBucket: "create-3b0f7.firebasestorage.app",
-  messagingSenderId: "222954978623",
-  appId: "1:222954978623:web:fb52decc4380934998278a",
-  measurementId: "G-TZZ0KCEB1Z"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const YOUR_UID = "6tm3ARsrMwPsyhV5DOqQG3ZqlHv1";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Club Dashboard</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 10px; background: #f5f5f5; }
+    h2 { text-align: center; }
+    .list-item { display: flex; justify-content: space-between; background: white; padding: 8px; margin: 4px 0; border-radius: 6px; }
+    .edit-btn, .delete-btn { margin-left: 5px; cursor: pointer; }
+    .hidden { display: none; }
+    #edit-modal { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+    }
+    #edit-box { background: white; padding: 15px; border-radius: 10px; width: 90%; max-width: 400px; }
+    #edit-box input, #edit-box textarea, #edit-box select { width: 100%; margin: 5px 0; padding: 6px; }
+    .btn-row { display: flex; justify-content: space-between; margin-top: 10px; }
+    .btn-row button { flex: 1; margin: 0 4px; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h2>Club Dashboard</h2>
 
-const loginSection = document.getElementById('login-section');
-const dashboard = document.getElementById('dashboard');
-const loginBtn = document.getElementById('login-btn');
-const loginError = document.getElementById('login-error');
+  <h3>Members</h3>
+  <div id="members-list"></div>
 
-const membersList = document.getElementById('members-list');
-const incomeList = document.getElementById('income-list');
-const expenseList = document.getElementById('expense-list');
+  <h3>Income</h3>
+  <div id="income-list"></div>
 
-const memberName = document.getElementById('member-name');
-const memberAmount = document.getElementById('member-amount');
-const memberDetails = document.getElementById('member-details');
-const memberRecurring = document.getElementById('member-recurring');
-const addMemberBtn = document.getElementById('add-member');
+  <h3>Expenses</h3>
+  <div id="expenses-list"></div>
 
-const incomeSource = document.getElementById('income-source');
-const incomeAmount = document.getElementById('income-amount');
-const incomeDetails = document.getElementById('income-details');
-const incomeCategory = document.getElementById('income-category');
-const incomeRecurring = document.getElementById('income-recurring');
-const addIncomeBtn = document.getElementById('add-income');
+  <!-- Edit Modal -->
+  <div id="edit-modal" class="hidden">
+    <div id="edit-box">
+      <h3 id="edit-title">Edit Entry</h3>
+      <input type="text" id="edit-field1">
+      <input type="number" id="edit-field2">
+      <textarea id="edit-details" placeholder="Details"></textarea>
+      <select id="edit-category"></select>
+      <select id="edit-recurring">
+        <option value="none">No Recurrence</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+      <div class="btn-row">
+        <button id="save-edit">💾 Save</button>
+        <button id="cancel-edit">❌ Cancel</button>
+      </div>
+    </div>
+  </div>
 
-const expenseItem = document.getElementById('expense-item');
-const expenseCost = document.getElementById('expense-cost');
-const expenseDetails = document.getElementById('expense-details');
-const expenseCategory = document.getElementById('expense-category');
-const expenseRecurring = document.getElementById('expense-recurring');
-const addExpenseBtn = document.getElementById('add-expense');
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+  import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-const totalIncomeEl = document.getElementById('total-income');
-const totalExpenseEl = document.getElementById('total-expense');
-const balanceEl = document.getElementById('balance');
-const topContributorEl = document.getElementById('top-contributor');
-const topDonationEl = document.getElementById('top-donation');
-const topExpenseEl = document.getElementById('top-expense');
+  // ✅ FULL FIREBASE CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyCuVs6jx7HiNIx25lzLgoq1B6nQqaHLHm0",
+    authDomain: "guestandcollection.firebaseapp.com",
+    projectId: "guestandcollection",
+    storageBucket: "guestandcollection.firebasestorage.app",
+    messagingSenderId: "272174514290",
+    appId: "1:272174514290:web:adf0f99bafccab70b6db0e"
+  };
 
-let currentUser = null;
-let membersChart, incomeChart, expenseChart, trendChart;
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-// Modal elements
-const editModal = document.getElementById('edit-modal');
-const editField1 = document.getElementById('edit-field1');
-const editField2 = document.getElementById('edit-field2');
-const editDetails = document.getElementById('edit-details');
-const editCategory = document.getElementById('edit-category');
-const editRecurring = document.getElementById('edit-recurring');
-const saveEditBtn = document.getElementById('save-edit');
-const cancelEditBtn = document.getElementById('cancel-edit');
-const editTitle = document.getElementById('edit-title');
+  const membersList = document.getElementById("members-list");
+  const incomeList = document.getElementById("income-list");
+  const expensesList = document.getElementById("expenses-list");
 
-let currentEditDoc = null;
-let currentEditType = null;
+  // Modal elements
+  const editModal = document.getElementById("edit-modal");
+  const editField1 = document.getElementById("edit-field1");
+  const editField2 = document.getElementById("edit-field2");
+  const editDetails = document.getElementById("edit-details");
+  const editCategory = document.getElementById("edit-category");
+  const editRecurring = document.getElementById("edit-recurring");
+  const editTitle = document.getElementById("edit-title");
+  const saveEditBtn = document.getElementById("save-edit");
+  const cancelEditBtn = document.getElementById("cancel-edit");
 
-// Login
-loginBtn.addEventListener('click', async () => {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  try {
-    const userCredential = await auth.signInWithEmailAndPassword(email, password);
-    currentUser = userCredential.user;
-    loginSection.classList.add('hidden');
-    dashboard.classList.remove('hidden');
-    initDashboard();
-  } catch(e) {
-    loginError.textContent = e.message;
-  }
-});
+  let currentDoc = null;
+  let currentType = null;
 
-function randomColor(i){ const colors=["#FF6F61","#FFD166","#06D6A0","#4D96FF","#FF6FFF","#FFA500"]; return colors[i%colors.length]; }
+  function createListItem(docSnap, type) {
+    const data = docSnap.data();
+    const div = document.createElement("div");
+    div.className = "list-item";
 
-function formatEntry(doc, type){
-  const d=doc.data();
-  let mainText='';
-  if(type==='member') mainText=`${d.name} - ₹${d.amount}`;
-  else if(type==='income') mainText=`${d.source} - ₹${d.amount}`;
-  else mainText=`${d.item} - ₹${d.cost}`;
-  const li=document.createElement('li'); li.textContent=mainText;
-  if(currentUser && currentUser.uid===YOUR_UID){
-    const edit=document.createElement('button'); edit.textContent='✏️'; edit.className='edit-btn';
-    edit.onclick=()=>openEditModal(doc,type,d);
-    const del=document.createElement('button'); del.textContent='🗑'; del.className='delete-btn';
-    del.onclick=()=>{db.collection(type==='member'?'members':type==='income'?'otherIncome':'expenses').doc(doc.id).delete()};
-    li.appendChild(edit); li.appendChild(del);
-  }
-  const det=document.createElement('div'); det.style.width='100%'; det.style.fontSize='0.85em'; det.style.color='#555';
-  det.textContent=d.details||'-';
-  li.appendChild(det);
-  return li;
-}
+    let label = "";
+    if (type === "member") label = `${data.name} - ₹${data.amount}`;
+    if (type === "income") label = `${data.source} - ₹${data.amount}`;
+    if (type === "expense") label = `${data.item} - ₹${data.cost}`;
 
-// Open modal
-function openEditModal(doc, type, data) {
-  currentEditDoc = doc;
-  currentEditType = type;
+    const span = document.createElement("span");
+    span.textContent = label;
 
-  // Reset fields
-  editField1.value = '';
-  editField2.value = '';
-  editDetails.value = '';
-  editCategory.innerHTML = '';
-  editCategory.style.display = 'none';
+    const edit = document.createElement("button");
+    edit.textContent = "✏️";
+    edit.className = "edit-btn";
+    edit.onclick = () => openEditModal(docSnap, type, data);
 
-  if(type === 'member'){
-    editTitle.textContent = "Edit Member";
-    editField1.placeholder = "Name"; editField1.value = data.name;
-    editField2.placeholder = "Amount"; editField2.value = data.amount;
-  } else if(type === 'income'){
-    editTitle.textContent = "Edit Income";
-    editField1.placeholder = "Source"; editField1.value = data.source;
-    editField2.placeholder = "Amount"; editField2.value = data.amount;
-    editCategory.style.display = 'block';
-    editCategory.innerHTML = `
-      <option value="General">General</option>
-      <option value="Advertisement">Advertisement</option>
-      <option value="Donation">Donation</option>
-      <option value="Sponsorship">Sponsorship</option>
-    `;
-    editCategory.value = data.category || 'General';
-  } else {
-    editTitle.textContent = "Edit Expense";
-    editField1.placeholder = "Item"; editField1.value = data.item;
-    editField2.placeholder = "Cost"; editField2.value = data.cost;
-    editCategory.style.display = 'block';
-    editCategory.innerHTML = `
-      <option value="General">General</option>
-      <option value="Food">Food</option>
-      <option value="Decoration">Decoration</option>
-      <option value="Transport">Transport</option>
-      <option value="Misc">Misc</option>
-    `;
-    editCategory.value = data.category || 'General';
-  }
-
-  editDetails.value = data.details || '';
-  editRecurring.value = data.recurring || 'none';
-  editModal.classList.remove('hidden');
-}
-
-cancelEditBtn.onclick = () => editModal.classList.add('hidden');
-
-saveEditBtn.onclick = async () => {
-  const updatedData = {};
-  if(currentEditType === 'member'){
-    updatedData.name = editField1.value.trim();
-    updatedData.amount = Number(editField2.value);
-  } else if(currentEditType === 'income'){
-    updatedData.source = editField1.value.trim();
-    updatedData.amount = Number(editField2.value);
-    updatedData.category = editCategory.value;
-  } else {
-    updatedData.item = editField1.value.trim();
-    updatedData.cost = Number(editField2.value);
-    updatedData.category = editCategory.value;
-  }
-  updatedData.details = editDetails.value.trim();
-  updatedData.recurring = editRecurring.value;
-  updatedData.lastEdited = firebase.firestore.Timestamp.fromDate(new Date());
-
-  const col = currentEditType==='member' ? 'members' :
-              currentEditType==='income' ? 'otherIncome' : 'expenses';
-
-  await db.collection(col).doc(currentEditDoc.id).update(updatedData);
-  editModal.classList.add('hidden');
-};
-
-// Recurring handler
-async function handleRecurring(){
-  const collections=['members','otherIncome','expenses'];
-  const now=new Date();
-  for(const col of collections){
-    const snap=await db.collection(col).get();
-    snap.forEach(doc=>{
-      const d=doc.data();
-      if(d.recurring && d.recurring!=='none'){
-        const lastDate=d.lastAdded?new Date(d.lastAdded.toDate()):null;
-        let shouldAdd=false;
-        if(d.recurring==='weekly'){
-          if(!lastDate|| (now-lastDate)/(1000*60*60*24)>=7) shouldAdd=true;
-        }else if(d.recurring==='monthly'){
-          if(!lastDate|| now.getMonth()!==lastDate.getMonth()) shouldAdd=true;
-        }
-        if(shouldAdd){
-          db.collection(col).add({...d,lastAdded:firebase.firestore.Timestamp.fromDate(now)});
-          db.collection(col).doc(doc.id).update({lastAdded:firebase.firestore.Timestamp.fromDate(now)});
-        }
+    const del = document.createElement("button");
+    del.textContent = "🗑️";
+    del.className = "delete-btn";
+    del.onclick = async () => {
+      if (confirm("Delete this entry?")) {
+        await deleteDoc(docSnap.ref);
       }
-    });
+    };
+
+    div.appendChild(span);
+    div.appendChild(edit);
+    div.appendChild(del);
+    return div;
   }
-}
 
-function initDashboard(){
-  handleRecurring();
-  db.collection('members').onSnapshot(snap=>{
-    membersList.innerHTML=''; let total=0; let topName='',topAmt=0;
-    snap.forEach(doc=>{
-      const d=doc.data(); total+=parseInt(d.amount); if(parseInt(d.amount)>topAmt){topAmt=parseInt(d.amount); topName=d.name;}
-      membersList.appendChild(formatEntry(doc,'member'));
-    });
-    totalIncomeEl.textContent=total;
-    topContributorEl.textContent=topName||'-';
-    updateCharts();
+  function openEditModal(docSnap, type, data) {
+    currentDoc = docSnap;
+    currentType = type;
+
+    editTitle.textContent = `Edit ${type}`;
+    if (type === "member") {
+      editField1.placeholder = "Name";
+      editField1.value = data.name;
+      editField2.placeholder = "Amount";
+      editField2.value = data.amount;
+      editCategory.innerHTML = "";
+      editCategory.style.display = "none";
+    } else if (type === "income") {
+      editField1.placeholder = "Source";
+      editField1.value = data.source;
+      editField2.placeholder = "Amount";
+      editField2.value = data.amount;
+      editCategory.style.display = "block";
+      editCategory.innerHTML = `
+        <option value="General">General</option>
+        <option value="Donation">Donation</option>
+        <option value="Sponsorship">Sponsorship</option>
+      `;
+      editCategory.value = data.category || "General";
+    } else {
+      editField1.placeholder = "Item";
+      editField1.value = data.item;
+      editField2.placeholder = "Cost";
+      editField2.value = data.cost;
+      editCategory.style.display = "block";
+      editCategory.innerHTML = `
+        <option value="General">General</option>
+        <option value="Food">Food</option>
+        <option value="Decoration">Decoration</option>
+      `;
+      editCategory.value = data.category || "General";
+    }
+
+    editDetails.value = data.details || "";
+    editRecurring.value = data.recurring || "none";
+    editModal.classList.remove("hidden");
+  }
+
+  cancelEditBtn.onclick = () => editModal.classList.add("hidden");
+
+  saveEditBtn.onclick = async () => {
+    const updatedData = {};
+    if (currentType === "member") {
+      updatedData.name = editField1.value;
+      updatedData.amount = parseInt(editField2.value);
+    } else if (currentType === "income") {
+      updatedData.source = editField1.value;
+      updatedData.amount = parseInt(editField2.value);
+      updatedData.category = editCategory.value;
+    } else {
+      updatedData.item = editField1.value;
+      updatedData.cost = parseInt(editField2.value);
+      updatedData.category = editCategory.value;
+    }
+    updatedData.details = editDetails.value;
+    updatedData.recurring = editRecurring.value;
+
+    await updateDoc(currentDoc.ref, updatedData);
+    editModal.classList.add("hidden");
+  };
+
+  // Realtime listeners
+  onSnapshot(collection(db, "members"), snap => {
+    membersList.innerHTML = "";
+    snap.forEach(docSnap => membersList.appendChild(createListItem(docSnap, "member")));
   });
 
-  db.collection('otherIncome').onSnapshot(snap=>{
-    incomeList.innerHTML=''; let total=0; let topAmt=0;
-    snap.forEach(doc=>{
-      const d=doc.data(); total+=parseInt(d.amount); if(parseInt(d.amount)>topAmt) topAmt=parseInt(d.amount);
-      incomeList.appendChild(formatEntry(doc,'income'));
-    });
-    totalIncomeEl.textContent=parseInt(totalIncomeEl.textContent)+total;
-    topDonationEl.textContent=topAmt?`₹${topAmt}`:'-';
-    updateCharts();
+  onSnapshot(collection(db, "otherIncome"), snap => {
+    incomeList.innerHTML = "";
+    snap.forEach(docSnap => incomeList.appendChild(createListItem(docSnap, "income")));
   });
 
-  db.collection('expenses').onSnapshot(snap=>{
-    expenseList.innerHTML=''; let total=0; let topAmt=0,topItem='';
-    snap.forEach(doc=>{
-      const d=doc.data(); total+=parseInt(d.cost); if(parseInt(d.cost)>topAmt){topAmt=parseInt(d.cost); topItem=d.item;}
-      expenseList.appendChild(formatEntry(doc,'expense'));
-    });
-    totalExpenseEl.textContent=total;
-    balanceEl.textContent=parseInt(totalIncomeEl.textContent)-total;
-    topExpenseEl.textContent=topItem||'-';
-    updateCharts();
+  onSnapshot(collection(db, "expenses"), snap => {
+    expensesList.innerHTML = "";
+    snap.forEach(docSnap => expensesList.appendChild(createListItem(docSnap, "expense")));
   });
-}
 
-addMemberBtn.addEventListener('click',()=>{db.collection('members').add({name:memberName.value,amount:parseInt(memberAmount.value),details:memberDetails.value,recurring:memberRecurring.value,lastAdded:firebase.firestore.Timestamp.fromDate(new Date())}); memberName.value=''; memberAmount.value=''; memberDetails.value='';});
-addIncomeBtn.addEventListener('click',()=>{db.collection('otherIncome').add({source:incomeSource.value,amount:parseInt(incomeAmount.value),details:incomeDetails.value,category:incomeCategory.value,recurring:incomeRecurring.value,lastAdded:firebase.firestore.Timestamp.fromDate(new Date())}); incomeSource.value=''; incomeAmount.value=''; incomeDetails.value='';});
-addExpenseBtn.addEventListener('click',()=>{db.collection('expenses').add({item:expenseItem.value,cost:parseInt(expenseCost.value),details:expenseDetails.value,category:expenseCategory.value,recurring:expenseRecurring.value,lastAdded:firebase.firestore.Timestamp.fromDate(new Date())}); expenseItem.value=''; expenseCost.value=''; expenseDetails.value='';});
-
-function updateCharts(){
-  if(membersChart) membersChart.destroy();
-  if(incomeChart) incomeChart.destroy();
-  if(expenseChart) expenseChart.destroy();
-  if(trendChart) trendChart.destroy();
-
-  membersChart=new Chart(document.getElementById('members-chart'),{type:'pie',data:{labels:Array.from(membersList.children).map(li=>li.firstChild.textContent.split('-')[0]),datasets:[{data:Array.from(membersList.children).map(li=>parseInt(li.firstChild.textContent.split('₹')[1])),backgroundColor:Array.from(membersList.children).map((_,i)=>randomColor(i))}]}});
-
-  incomeChart=new Chart(document.getElementById('income-chart'),{type:'bar',data:{labels:Array.from(incomeList.children).map(li=>li.firstChild.textContent.split('-')[0]),datasets:[{label:'Income',data:Array.from(incomeList.children).map(li=>parseInt(li.firstChild.textContent.split('₹')[1])),backgroundColor:'#06D6A0'}]}});
-
-  expenseChart=new Chart(document.getElementById('expense-chart'),{type:'bar',data:{labels:Array.from(expenseList.children).map(li=>li.firstChild.textContent.split('-')[0]),datasets:[{label:'Expenses',data:Array.from(expenseList.children).map(li=>parseInt(li.firstChild.textContent.split('₹')[1])),backgroundColor:'#FF6F61'}]}});
-
-  trendChart=new Chart(document.getElementById('trend-chart'),{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],datasets:[{label:'Income',data:[5,10,8,12,15,20,25,22,18,10,7,12],borderColor:'#06D6A0',fill:false},{label:'Expense',data:[3,7,6,10,13,18,20,18,15,9,5,10],borderColor:'#FF6F61',fill:false}]}});
-}
 </script>
+</body>
+</html>
