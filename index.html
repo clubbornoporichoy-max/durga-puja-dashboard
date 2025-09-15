@@ -1,185 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Durga Puja Dashboard</title>
-
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body { font-family: 'Poppins', sans-serif; margin: 0; background: #F7F7F7; }
-header { background: linear-gradient(90deg, #FF6F61, #FFD166); padding: 20px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;}
-header h1 { margin: 0; font-size: 2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-#export-import { position: absolute; top: 20px; right: 20px; display:flex; gap:10px; }
-.container { max-width: 1200px; margin: auto; padding: 20px; }
-section.card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
-section.card:hover { transform: translateY(-5px); }
-h2 { color: #333; margin-bottom: 10px; }
-ul { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
-li { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid #eee; align-items: center; flex-wrap:wrap; gap:5px; }
-input, select, textarea { padding: 6px 8px; margin-right: 5px; border-radius: 6px; border: 1px solid #ccc; width:100%; }
-button { padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; }
-.add-btn { background: #06D6A0; color: white; }
-.edit-btn { background: orange; color: white; }
-.delete-btn { background: red; color: white; }
-.export-btn { background:#4D96FF; color:white;}
-.import-btn { background:#FF6FFF; color:white;}
-button:hover { opacity: 0.85; transform: scale(1.05); }
-.chart-container { width: 100%; height: 300px; margin-top: 20px; }
-.hidden { display: none; }
-.flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
-.flex-row > section { flex: 1 1 calc(50% - 20px); }
-.summary-mini { display:flex; justify-content: space-between; padding:10px; border-radius:8px; background:#FFEBCD; margin-bottom:10px; font-weight:600;}
-.details-field { width:100%; padding:5px; border-radius:5px; margin-top:3px; border:1px solid #ccc; }
-</style>
-</head>
-<body>
-
-<header>
-  <h1> Durga Puja CLUB BORNOPORICHOY Dashboard 2025 </h1>
-  <div id="export-import">
-    <button class="export-btn" id="export-csv">Export CSV</button>
-    <button class="import-btn" id="import-csv">Import CSV</button>
-  </div>
-</header>
-
-<div class="container">
-
-  <div id="login-section">
-    <h2>Login</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button id="login-btn">Login</button>
-    <p id="login-error" style="color:red;"></p>
-  </div>
-
-  <div id="dashboard" class="hidden">
-
-    <div class="flex-row">
-      <section class="card">
-        <h2>Summary</h2>
-        <div class="summary-mini">Total Income: ₹<span id="total-income">0</span></div>
-        <div class="summary-mini">Total Expenses: ₹<span id="total-expense">0</span></div>
-        <div class="summary-mini">Balance: ₹<span id="balance">0</span></div>
-        <div class="summary-mini">Top Contributor: <span id="top-contributor">-</span></div>
-        <div class="summary-mini">Largest Donation: <span id="top-donation">-</span></div>
-        <div class="summary-mini">Highest Expense: <span id="top-expense">-</span></div>
-      </section>
-
-      <section class="card">
-        <h2>Income vs Expense Trend</h2>
-        <canvas id="trend-chart"></canvas>
-      </section>
-    </div>
-
-    <div class="flex-row">
-      <section class="card">
-        <h2>Members Contribution</h2>
-        <ul id="members-list"></ul>
-        <div id="members-form">
-          <input type="text" id="member-name" placeholder="Name">
-          <input type="number" id="member-amount" placeholder="Amount">
-          <textarea id="member-details" placeholder="Details" class="details-field"></textarea>
-          <select id="member-recurring">
-            <option value="none">No Recurrence</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-          <button class="add-btn" id="add-member">➕ Add</button>
-        </div>
-        <div class="chart-container">
-          <canvas id="members-chart"></canvas>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Other Income</h2>
-        <ul id="income-list"></ul>
-        <div id="income-form">
-          <input type="text" id="income-source" placeholder="Source">
-          <input type="number" id="income-amount" placeholder="Amount">
-          <textarea id="income-details" placeholder="Details" class="details-field"></textarea>
-          <select id="income-category">
-            <option value="General">General</option>
-            <option value="Advertisement">Advertisement</option>
-            <option value="Donation">Donation</option>
-            <option value="Sponsorship">Sponsorship</option>
-          </select>
-          <select id="income-recurring">
-            <option value="none">No Recurrence</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-          <button class="add-btn" id="add-income">➕ Add</button>
-        </div>
-        <div class="chart-container">
-          <canvas id="income-chart"></canvas>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Expenses</h2>
-        <ul id="expense-list"></ul>
-        <div id="expense-form">
-          <input type="text" id="expense-item" placeholder="Item">
-          <input type="number" id="expense-cost" placeholder="Cost">
-          <textarea id="expense-details" placeholder="Details" class="details-field"></textarea>
-          <select id="expense-category">
-            <option value="General">General</option>
-            <option value="Food">Food</option>
-            <option value="Decoration">Decoration</option>
-            <option value="Transport">Transport</option>
-            <option value="Misc">Misc</option>
-          </select>
-          <select id="expense-recurring">
-            <option value="none">No Recurrence</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-          <button class="add-btn" id="add-expense">➕ Add</button>
-        </div>
-        <div class="chart-container">
-          <canvas id="expense-chart"></canvas>
-        </div>
-      </section>
-    </div>
-
-  </div>
-</div>
-
-<!-- Edit Modal -->
-<div id="edit-modal" class="hidden" style="
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center;
-">
-  <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:400px;">
-    <h3 id="edit-title">Edit Entry</h3>
-    <input type="text" id="edit-field1" class="details-field" placeholder="">
-    <input type="number" id="edit-field2" class="details-field" placeholder="">
-    <textarea id="edit-details" class="details-field" placeholder="Details"></textarea>
-    <select id="edit-category" class="details-field"></select>
-    <select id="edit-recurring" class="details-field">
-      <option value="none">No Recurrence</option>
-      <option value="weekly">Weekly</option>
-      <option value="monthly">Monthly</option>
-    </select>
-    <div style="display:flex; justify-content:space-between; margin-top:10px;">
-      <button id="save-edit" class="add-btn">💾 Save</button>
-      <button id="cancel-edit" class="delete-btn">❌ Cancel</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDO56RHOZ9rGHFo6a4O2hcYw9JLxVdfBwQ",
@@ -263,8 +81,8 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
-// Utility
 function randomColor(i){ const colors=["#FF6F61","#FFD166","#06D6A0","#4D96FF","#FF6FFF","#FFA500"]; return colors[i%colors.length]; }
+
 function formatEntry(doc, type){
   const d=doc.data();
   let mainText='';
@@ -290,11 +108,17 @@ function openEditModal(doc, type, data) {
   currentEditDoc = doc;
   currentEditType = type;
 
+  // Reset fields
+  editField1.value = '';
+  editField2.value = '';
+  editDetails.value = '';
+  editCategory.innerHTML = '';
+  editCategory.style.display = 'none';
+
   if(type === 'member'){
     editTitle.textContent = "Edit Member";
     editField1.placeholder = "Name"; editField1.value = data.name;
     editField2.placeholder = "Amount"; editField2.value = data.amount;
-    editCategory.style.display = 'none';
   } else if(type === 'income'){
     editTitle.textContent = "Edit Income";
     editField1.placeholder = "Source"; editField1.value = data.source;
@@ -327,32 +151,34 @@ function openEditModal(doc, type, data) {
   editModal.classList.remove('hidden');
 }
 
-cancelEditBtn.onclick = () => { editModal.classList.add('hidden'); };
+cancelEditBtn.onclick = () => editModal.classList.add('hidden');
 
-saveEditBtn.onclick = () => {
+saveEditBtn.onclick = async () => {
   const updatedData = {};
   if(currentEditType === 'member'){
-    updatedData.name = editField1.value;
-    updatedData.amount = parseInt(editField2.value);
+    updatedData.name = editField1.value.trim();
+    updatedData.amount = Number(editField2.value);
   } else if(currentEditType === 'income'){
-    updatedData.source = editField1.value;
-    updatedData.amount = parseInt(editField2.value);
+    updatedData.source = editField1.value.trim();
+    updatedData.amount = Number(editField2.value);
     updatedData.category = editCategory.value;
   } else {
-    updatedData.item = editField1.value;
-    updatedData.cost = parseInt(editField2.value);
+    updatedData.item = editField1.value.trim();
+    updatedData.cost = Number(editField2.value);
     updatedData.category = editCategory.value;
   }
-  updatedData.details = editDetails.value;
+  updatedData.details = editDetails.value.trim();
   updatedData.recurring = editRecurring.value;
+  updatedData.lastEdited = firebase.firestore.Timestamp.fromDate(new Date());
 
   const col = currentEditType==='member' ? 'members' :
               currentEditType==='income' ? 'otherIncome' : 'expenses';
-  db.collection(col).doc(currentEditDoc.id).update(updatedData);
+
+  await db.collection(col).doc(currentEditDoc.id).update(updatedData);
   editModal.classList.add('hidden');
 };
 
-// Automated recurring entries
+// Recurring handler
 async function handleRecurring(){
   const collections=['members','otherIncome','expenses'];
   const now=new Date();
@@ -414,7 +240,6 @@ function initDashboard(){
   });
 }
 
-// Add
 addMemberBtn.addEventListener('click',()=>{db.collection('members').add({name:memberName.value,amount:parseInt(memberAmount.value),details:memberDetails.value,recurring:memberRecurring.value,lastAdded:firebase.firestore.Timestamp.fromDate(new Date())}); memberName.value=''; memberAmount.value=''; memberDetails.value='';});
 addIncomeBtn.addEventListener('click',()=>{db.collection('otherIncome').add({source:incomeSource.value,amount:parseInt(incomeAmount.value),details:incomeDetails.value,category:incomeCategory.value,recurring:incomeRecurring.value,lastAdded:firebase.firestore.Timestamp.fromDate(new Date())}); incomeSource.value=''; incomeAmount.value=''; incomeDetails.value='';});
 addExpenseBtn.addEventListener('click',()=>{db.collection('expenses').add({item:expenseItem.value,cost:parseInt(expenseCost.value),details:expenseDetails.value,category:expenseCategory.value,recurring:expenseRecurring.value,lastAdded:firebase.firestore.Timestamp.fromDate(new Date())}); expenseItem.value=''; expenseCost.value=''; expenseDetails.value='';});
@@ -434,6 +259,3 @@ function updateCharts(){
   trendChart=new Chart(document.getElementById('trend-chart'),{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],datasets:[{label:'Income',data:[5,10,8,12,15,20,25,22,18,10,7,12],borderColor:'#06D6A0',fill:false},{label:'Expense',data:[3,7,6,10,13,18,20,18,15,9,5,10],borderColor:'#FF6F61',fill:false}]}});
 }
 </script>
-
-</body>
-</html>
