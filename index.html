@@ -27,7 +27,7 @@ section.card:hover { transform: translateY(-5px); }
 h2 { color: #333; margin-bottom: 10px; }
 ul { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
 li { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid #eee; align-items: center; flex-wrap:wrap; gap:5px; }
-input, select { padding: 6px 8px; margin-right: 5px; border-radius: 6px; border: 1px solid #ccc; }
+input, select, textarea { padding: 6px 8px; margin-right: 5px; border-radius: 6px; border: 1px solid #ccc; width:100%; }
 button { padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; }
 .add-btn { background: #06D6A0; color: white; }
 .edit-btn { background: orange; color: white; }
@@ -157,6 +157,29 @@ button:hover { opacity: 0.85; transform: scale(1.05); }
   </div>
 </div>
 
+<!-- Edit Modal -->
+<div id="edit-modal" class="hidden" style="
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center;
+">
+  <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:400px;">
+    <h3 id="edit-title">Edit Entry</h3>
+    <input type="text" id="edit-field1" class="details-field" placeholder="">
+    <input type="number" id="edit-field2" class="details-field" placeholder="">
+    <textarea id="edit-details" class="details-field" placeholder="Details"></textarea>
+    <select id="edit-category" class="details-field"></select>
+    <select id="edit-recurring" class="details-field">
+      <option value="none">No Recurrence</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+    </select>
+    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+      <button id="save-edit" class="add-btn">💾 Save</button>
+      <button id="cancel-edit" class="delete-btn">❌ Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDO56RHOZ9rGHFo6a4O2hcYw9JLxVdfBwQ",
@@ -211,6 +234,20 @@ const topExpenseEl = document.getElementById('top-expense');
 let currentUser = null;
 let membersChart, incomeChart, expenseChart, trendChart;
 
+// Modal elements
+const editModal = document.getElementById('edit-modal');
+const editField1 = document.getElementById('edit-field1');
+const editField2 = document.getElementById('edit-field2');
+const editDetails = document.getElementById('edit-details');
+const editCategory = document.getElementById('edit-category');
+const editRecurring = document.getElementById('edit-recurring');
+const saveEditBtn = document.getElementById('save-edit');
+const cancelEditBtn = document.getElementById('cancel-edit');
+const editTitle = document.getElementById('edit-title');
+
+let currentEditDoc = null;
+let currentEditType = null;
+
 // Login
 loginBtn.addEventListener('click', async () => {
   const email = document.getElementById('email').value;
@@ -235,28 +272,85 @@ function formatEntry(doc, type){
   else if(type==='income') mainText=`${d.source} - ₹${d.amount}`;
   else mainText=`${d.item} - ₹${d.cost}`;
   const li=document.createElement('li'); li.textContent=mainText;
-  if(currentUser.uid===YOUR_UID){
+  if(currentUser && currentUser.uid===YOUR_UID){
     const edit=document.createElement('button'); edit.textContent='✏️'; edit.className='edit-btn';
-    edit.onclick=()=>{
-      let newVal=0;
-      if(type==='member') newVal=prompt("Enter new amount",d.amount);
-      else if(type==='income') newVal=prompt("Enter new amount",d.amount);
-      else newVal=prompt("Enter new cost",d.cost);
-      if(newVal){
-        const field=(type==='expense')?'cost':'amount';
-        db.collection(type==='member'?'members':type==='income'?'otherIncome':'expenses').doc(doc.id).update({[field]:parseInt(newVal)});
-      }
-    };
+    edit.onclick=()=>openEditModal(doc,type,d);
     const del=document.createElement('button'); del.textContent='🗑'; del.className='delete-btn';
     del.onclick=()=>{db.collection(type==='member'?'members':type==='income'?'otherIncome':'expenses').doc(doc.id).delete()};
     li.appendChild(edit); li.appendChild(del);
   }
-  // Show details
   const det=document.createElement('div'); det.style.width='100%'; det.style.fontSize='0.85em'; det.style.color='#555';
   det.textContent=d.details||'-';
   li.appendChild(det);
   return li;
 }
+
+// Open modal
+function openEditModal(doc, type, data) {
+  currentEditDoc = doc;
+  currentEditType = type;
+
+  if(type === 'member'){
+    editTitle.textContent = "Edit Member";
+    editField1.placeholder = "Name"; editField1.value = data.name;
+    editField2.placeholder = "Amount"; editField2.value = data.amount;
+    editCategory.style.display = 'none';
+  } else if(type === 'income'){
+    editTitle.textContent = "Edit Income";
+    editField1.placeholder = "Source"; editField1.value = data.source;
+    editField2.placeholder = "Amount"; editField2.value = data.amount;
+    editCategory.style.display = 'block';
+    editCategory.innerHTML = `
+      <option value="General">General</option>
+      <option value="Advertisement">Advertisement</option>
+      <option value="Donation">Donation</option>
+      <option value="Sponsorship">Sponsorship</option>
+    `;
+    editCategory.value = data.category || 'General';
+  } else {
+    editTitle.textContent = "Edit Expense";
+    editField1.placeholder = "Item"; editField1.value = data.item;
+    editField2.placeholder = "Cost"; editField2.value = data.cost;
+    editCategory.style.display = 'block';
+    editCategory.innerHTML = `
+      <option value="General">General</option>
+      <option value="Food">Food</option>
+      <option value="Decoration">Decoration</option>
+      <option value="Transport">Transport</option>
+      <option value="Misc">Misc</option>
+    `;
+    editCategory.value = data.category || 'General';
+  }
+
+  editDetails.value = data.details || '';
+  editRecurring.value = data.recurring || 'none';
+  editModal.classList.remove('hidden');
+}
+
+cancelEditBtn.onclick = () => { editModal.classList.add('hidden'); };
+
+saveEditBtn.onclick = () => {
+  const updatedData = {};
+  if(currentEditType === 'member'){
+    updatedData.name = editField1.value;
+    updatedData.amount = parseInt(editField2.value);
+  } else if(currentEditType === 'income'){
+    updatedData.source = editField1.value;
+    updatedData.amount = parseInt(editField2.value);
+    updatedData.category = editCategory.value;
+  } else {
+    updatedData.item = editField1.value;
+    updatedData.cost = parseInt(editField2.value);
+    updatedData.category = editCategory.value;
+  }
+  updatedData.details = editDetails.value;
+  updatedData.recurring = editRecurring.value;
+
+  const col = currentEditType==='member' ? 'members' :
+              currentEditType==='income' ? 'otherIncome' : 'expenses';
+  db.collection(col).doc(currentEditDoc.id).update(updatedData);
+  editModal.classList.add('hidden');
+};
 
 // Automated recurring entries
 async function handleRecurring(){
@@ -267,139 +361,79 @@ async function handleRecurring(){
     snap.forEach(doc=>{
       const d=doc.data();
       if(d.recurring && d.recurring!=='none'){
-        const last=d.lastRecurrence?d.lastRecurrence.toDate():d.createdAt.toDate();
-        const nextDate=new Date(last);
-        if(d.recurring==='weekly') nextDate.setDate(nextDate.getDate()+7);
-        else if(d.recurring==='monthly') nextDate.setMonth(nextDate.getMonth()+1);
-        if(nextDate<=now){
-          const newEntry={...d, createdAt:firebase.firestore.FieldValue.serverTimestamp(), lastRecurrence:firebase.firestore.FieldValue.serverTimestamp()};
-          delete newEntry.id;
-          db.collection(col).add(newEntry);
-          db.collection(col).doc(doc.id).update({lastRecurrence:firebase.firestore.FieldValue.serverTimestamp()});
+        const lastDate=d.lastAdded?new Date(d.lastAdded.toDate()):null;
+        let shouldAdd=false;
+        if(d.recurring==='weekly'){
+          if(!lastDate|| (now-lastDate)/(1000*60*60*24)>=7) shouldAdd=true;
+        }else if(d.recurring==='monthly'){
+          if(!lastDate|| now.getMonth()!==lastDate.getMonth()) shouldAdd=true;
+        }
+        if(shouldAdd){
+          db.collection(col).add({...d,lastAdded:firebase.firestore.Timestamp.fromDate(now)});
+          db.collection(col).doc(doc.id).update({lastAdded:firebase.firestore.Timestamp.fromDate(now)});
         }
       }
     });
   }
 }
 
-// Dashboard init
-function initDashboard() {
+function initDashboard(){
   handleRecurring();
-
-  // Members
-  db.collection('members').orderBy('createdAt').onSnapshot(snapshot=>{
-    membersList.innerHTML=''; let total=0; let top=0; let topName='-'; let labels=[], data=[];
-    snapshot.forEach(doc=>{
-      const d=doc.data(); total+=d.amount; labels.push(d.name); data.push(d.amount); if(d.amount>top){top=d.amount; topName=d.name;}
+  db.collection('members').onSnapshot(snap=>{
+    membersList.innerHTML=''; let total=0; let topName='',topAmt=0;
+    snap.forEach(doc=>{
+      const d=doc.data(); total+=parseInt(d.amount); if(parseInt(d.amount)>topAmt){topAmt=parseInt(d.amount); topName=d.name;}
       membersList.appendChild(formatEntry(doc,'member'));
     });
-    totalIncomeEl.textContent=total; topContributorEl.textContent=topName;
-    if(membersChart) membersChart.destroy();
-    const ctx=document.getElementById('members-chart').getContext('2d');
-    membersChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true}});
-    updateTrendChart();
+    totalIncomeEl.textContent=total;
+    topContributorEl.textContent=topName||'-';
+    updateCharts();
   });
 
-  // Other Income
-  db.collection('otherIncome').orderBy('createdAt').onSnapshot(snapshot=>{
-    incomeList.innerHTML=''; let labels=[], data=[];
-    snapshot.forEach(doc=>{
-      const d=doc.data(); labels.push(d.source); data.push(d.amount);
+  db.collection('otherIncome').onSnapshot(snap=>{
+    incomeList.innerHTML=''; let total=0; let topAmt=0;
+    snap.forEach(doc=>{
+      const d=doc.data(); total+=parseInt(d.amount); if(parseInt(d.amount)>topAmt) topAmt=parseInt(d.amount);
       incomeList.appendChild(formatEntry(doc,'income'));
     });
-    if(incomeChart) incomeChart.destroy();
-    const ctx=document.getElementById('income-chart').getContext('2d');
-    incomeChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true}});
-    updateTrendChart();
+    totalIncomeEl.textContent=parseInt(totalIncomeEl.textContent)+total;
+    topDonationEl.textContent=topAmt?`₹${topAmt}`:'-';
+    updateCharts();
   });
 
-  // Expenses
-  db.collection('expenses').orderBy('createdAt').onSnapshot(snapshot=>{
-    expenseList.innerHTML=''; let total=0; let top=0; let topName='-'; let labels=[], data=[];
-    snapshot.forEach(doc=>{
-      const d=doc.data(); total+=d.cost; labels.push(d.item); data.push(d.cost); if(d.cost>top){top=d.cost; topName=d.item;}
+  db.collection('expenses').onSnapshot(snap=>{
+    expenseList.innerHTML=''; let total=0; let topAmt=0,topItem='';
+    snap.forEach(doc=>{
+      const d=doc.data(); total+=parseInt(d.cost); if(parseInt(d.cost)>topAmt){topAmt=parseInt(d.cost); topItem=d.item;}
       expenseList.appendChild(formatEntry(doc,'expense'));
     });
-    totalExpenseEl.textContent=total; topExpenseEl.textContent=topName;
-    if(expenseChart) expenseChart.destroy();
-    const ctx=document.getElementById('expense-chart').getContext('2d');
-    expenseChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true}});
-    updateTrendChart();
+    totalExpenseEl.textContent=total;
+    balanceEl.textContent=parseInt(totalIncomeEl.textContent)-total;
+    topExpenseEl.textContent=topItem||'-';
+    updateCharts();
   });
 }
 
-// Add entries
-addMemberBtn.onclick = () => {
-  if(currentUser.uid===YOUR_UID && memberName.value && memberAmount.value){
-    db.collection('members').add({
-      name: memberName.value,
-      amount: parseInt(memberAmount.value),
-      details: memberDetails.value,
-      recurring: memberRecurring.value,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    memberName.value=''; memberAmount.value=''; memberDetails.value=''; memberRecurring.value='none';
-  }
-};
-addIncomeBtn.onclick = () => {
-  if(currentUser.uid===YOUR_UID && incomeSource.value && incomeAmount.value){
-    db.collection('otherIncome').add({
-      source: incomeSource.value,
-      amount: parseInt(incomeAmount.value),
-      details: incomeDetails.value,
-      category: incomeCategory.value,
-      recurring: incomeRecurring.value,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    incomeSource.value=''; incomeAmount.value=''; incomeDetails.value=''; incomeCategory.value='General'; incomeRecurring.value='none';
-  }
-};
-addExpenseBtn.onclick = () => {
-  if(currentUser.uid===YOUR_UID && expenseItem.value && expenseCost.value){
-    db.collection('expenses').add({
-      item: expenseItem.value,
-      cost: parseInt(expenseCost.value),
-      details: expenseDetails.value,
-      category: expenseCategory.value,
-      recurring: expenseRecurring.value,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    expenseItem.value=''; expenseCost.value=''; expenseDetails.value=''; expenseCategory.value='General'; expenseRecurring.value='none';
-  }
-};
+// Add
+addMemberBtn.addEventListener('click',()=>{db.collection('members').add({name:memberName.value,amount:parseInt(memberAmount.value),details:memberDetails.value,recurring:memberRecurring.value,lastAdded:firebase.firestore.Timestamp.fromDate(new Date())}); memberName.value=''; memberAmount.value=''; memberDetails.value='';});
+addIncomeBtn.addEventListener('click',()=>{db.collection('otherIncome').add({source:incomeSource.value,amount:parseInt(incomeAmount.value),details:incomeDetails.value,category:incomeCategory.value,recurring:incomeRecurring.value,lastAdded:firebase.firestore.Timestamp.fromDate(new Date())}); incomeSource.value=''; incomeAmount.value=''; incomeDetails.value='';});
+addExpenseBtn.addEventListener('click',()=>{db.collection('expenses').add({item:expenseItem.value,cost:parseInt(expenseCost.value),details:expenseDetails.value,category:expenseCategory.value,recurring:expenseRecurring.value,lastAdded:firebase.firestore.Timestamp.fromDate(new Date())}); expenseItem.value=''; expenseCost.value=''; expenseDetails.value='';});
 
-// Trend chart
-function updateTrendChart(){
-  Promise.all([
-    db.collection('members').orderBy('createdAt').get(),
-    db.collection('otherIncome').orderBy('createdAt').get(),
-    db.collection('expenses').orderBy('createdAt').get()
-  ]).then(([memSnap, incSnap, expSnap])=>{
-    let labels=[], income=[], expense=[], cumIncome=0, cumExpense=0;
-    const maxLen = Math.max(memSnap.size, incSnap.size, expSnap.size);
-    for(let i=0;i<maxLen;i++){
-      if(memSnap.docs[i]) cumIncome+=memSnap.docs[i].data().amount;
-      if(incSnap.docs[i]) cumIncome+=incSnap.docs[i].data().amount;
-      if(expSnap.docs[i]) cumExpense+=expSnap.docs[i].data().cost;
-      labels.push(`Entry ${i+1}`);
-      income.push(cumIncome);
-      expense.push(cumExpense);
-    }
-    if(trendChart) trendChart.destroy();
-    const ctx=document.getElementById('trend-chart').getContext('2d');
-    trendChart=new Chart(ctx,{
-      type:'line',
-      data:{labels,datasets:[
-        {label:'Income',data:income,borderColor:'#06D6A0',backgroundColor:'#06D6A022',tension:0.4,fill:true},
-        {label:'Expense',data:expense,borderColor:'#FF6F61',backgroundColor:'#FF6F6122',tension:0.4,fill:true}
-      ]},
-      options:{responsive:true}
-    });
-    totalIncomeEl.textContent = income[income.length-1] || 0;
-    totalExpenseEl.textContent = expense[expense.length-1] || 0;
-    balanceEl.textContent = (income[income.length-1] || 0) - (expense[expense.length-1] || 0);
-  });
+function updateCharts(){
+  if(membersChart) membersChart.destroy();
+  if(incomeChart) incomeChart.destroy();
+  if(expenseChart) expenseChart.destroy();
+  if(trendChart) trendChart.destroy();
+
+  membersChart=new Chart(document.getElementById('members-chart'),{type:'pie',data:{labels:Array.from(membersList.children).map(li=>li.firstChild.textContent.split('-')[0]),datasets:[{data:Array.from(membersList.children).map(li=>parseInt(li.firstChild.textContent.split('₹')[1])),backgroundColor:Array.from(membersList.children).map((_,i)=>randomColor(i))}]}});
+
+  incomeChart=new Chart(document.getElementById('income-chart'),{type:'bar',data:{labels:Array.from(incomeList.children).map(li=>li.firstChild.textContent.split('-')[0]),datasets:[{label:'Income',data:Array.from(incomeList.children).map(li=>parseInt(li.firstChild.textContent.split('₹')[1])),backgroundColor:'#06D6A0'}]}});
+
+  expenseChart=new Chart(document.getElementById('expense-chart'),{type:'bar',data:{labels:Array.from(expenseList.children).map(li=>li.firstChild.textContent.split('-')[0]),datasets:[{label:'Expenses',data:Array.from(expenseList.children).map(li=>parseInt(li.firstChild.textContent.split('₹')[1])),backgroundColor:'#FF6F61'}]}});
+
+  trendChart=new Chart(document.getElementById('trend-chart'),{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],datasets:[{label:'Income',data:[5,10,8,12,15,20,25,22,18,10,7,12],borderColor:'#06D6A0',fill:false},{label:'Expense',data:[3,7,6,10,13,18,20,18,15,9,5,10],borderColor:'#FF6F61',fill:false}]}});
 }
 </script>
+
 </body>
 </html>
