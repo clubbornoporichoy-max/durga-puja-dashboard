@@ -15,7 +15,6 @@
       margin: 0;
       background: #F7F7F7;
     }
-
     header {
       background: linear-gradient(90deg, #FF6F61, #FFD166);
       padding: 20px;
@@ -24,27 +23,23 @@
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       position: relative;
     }
-
     header h1 {
       margin: 0;
       font-size: 2rem;
       text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
     }
-
     #export-import {
       position: absolute;
       top: 20px;
       right: 20px;
-      display: flex;
-      gap: 10px;
+      display:flex;
+      gap:10px;
     }
-
     .container {
       max-width: 1200px;
       margin: auto;
       padding: 20px;
     }
-
     section.card {
       background: white;
       border-radius: 12px;
@@ -53,16 +48,13 @@
       box-shadow: 0 6px 15px rgba(0,0,0,0.08);
       transition: transform 0.2s;
     }
-
     section.card:hover {
       transform: translateY(-5px);
     }
-
     h2 {
       color: #333;
       margin-bottom: 10px;
     }
-
     ul {
       list-style: none;
       padding: 0;
@@ -70,24 +62,21 @@
       overflow-y: auto;
       margin-bottom: 10px;
     }
-
     li {
       display: flex;
       justify-content: space-between;
       padding: 8px 5px;
       border-bottom: 1px solid #eee;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 5px;
+      flex-wrap:wrap;
+      gap:5px;
     }
-
     input, select {
       padding: 6px 8px;
       margin-right: 5px;
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
     button {
       padding: 6px 10px;
       border-radius: 6px;
@@ -95,52 +84,44 @@
       cursor: pointer;
       transition: 0.2s;
     }
-
     .add-btn { background: #06D6A0; color: white; }
     .edit-btn { background: orange; color: white; }
     .delete-btn { background: red; color: white; }
-    .export-btn { background: #4D96FF; color: white; }
-    .import-btn { background: #FF6FFF; color: white; }
-
+    .export-btn { background:#4D96FF; color:white;}
+    .import-btn { background:#FF6FFF; color:white;}
     button:hover {
       opacity: 0.85;
       transform: scale(1.05);
     }
-
     .chart-container {
       width: 100%;
       height: 300px;
       margin-top: 20px;
     }
-
     .hidden { display: none; }
-
     .flex-row {
       display: flex;
       gap: 20px;
       flex-wrap: wrap;
     }
-
     .flex-row > section {
       flex: 1 1 calc(50% - 20px);
     }
-
     .summary-mini {
-      display: flex;
+      display:flex;
       justify-content: space-between;
-      padding: 10px;
-      border-radius: 8px;
-      background: #FFEBCD;
-      margin-bottom: 10px;
-      font-weight: 600;
+      padding:10px;
+      border-radius:8px;
+      background:#FFEBCD;
+      margin-bottom:10px;
+      font-weight:600;
     }
-
     .details-field {
-      width: 100%;
-      padding: 5px;
-      border-radius: 5px;
-      margin-top: 3px;
-      border: 1px solid #ccc;
+      width:100%;
+      padding:5px;
+      border-radius:5px;
+      margin-top:3px;
+      border:1px solid #ccc;
     }
   </style>
 </head>
@@ -273,6 +254,7 @@
     const dashboard = document.getElementById('dashboard');
     const loginBtn = document.getElementById('login-btn');
     const loginError = document.getElementById('login-error');
+
     const membersList = document.getElementById('members-list');
     const incomeList = document.getElementById('income-list');
     const expenseList = document.getElementById('expense-list');
@@ -321,7 +303,242 @@
       }
     });
 
-    // ... The rest of the JS functions remain unchanged ...
+    function randomColor(i){
+      const colors=["#FF6F61","#FFD166","#06D6A0","#4D96FF","#FF6FFF","#FFA500"];
+      return colors[i%colors.length];
+    }
+
+    function formatEntry(doc, type){
+      const d=doc.data();
+      let mainText='';
+      if(type==='member') mainText=`${d.name} - ₹${d.amount}`;
+      else if(type==='income') mainText=`${d.source} - ₹${d.amount}`;
+      else mainText=`${d.item} - ₹${d.cost}`;
+
+      const li=document.createElement('li');
+      li.textContent=mainText;
+
+      if(currentUser && currentUser.uid===YOUR_UID){
+        const edit=document.createElement('button');
+        edit.textContent='✏️';
+        edit.className='edit-btn';
+        edit.onclick=()=>{
+          if(type==='member'){
+            const newName=prompt("Edit Name", d.name);
+            const newAmt=prompt("Edit Amount", d.amount);
+            const newDetails=prompt("Edit Details", d.details || "");
+            db.collection('members').doc(doc.id).update({
+              name:newName || d.name,
+              amount:parseInt(newAmt)||d.amount,
+              details:newDetails || d.details
+            });
+          }
+          if(type==='income'){
+            const newSrc=prompt("Edit Source", d.source);
+            const newAmt=prompt("Edit Amount", d.amount);
+            const newDetails=prompt("Edit Details", d.details || "");
+            db.collection('otherIncome').doc(doc.id).update({
+              source:newSrc || d.source,
+              amount:parseInt(newAmt)||d.amount,
+              details:newDetails || d.details
+            });
+          }
+          if(type==='expense'){
+            const newItem=prompt("Edit Item", d.item);
+            const newCost=prompt("Edit Cost", d.cost);
+            const newDetails=prompt("Edit Details", d.details || "");
+            db.collection('expenses').doc(doc.id).update({
+              item:newItem || d.item,
+              cost:parseInt(newCost)||d.cost,
+              details:newDetails || d.details
+            });
+          }
+        };
+        const del=document.createElement('button');
+        del.textContent='🗑';
+        del.className='delete-btn';
+        del.onclick=()=>{db.collection(type==='member'?'members':type==='income'?'otherIncome':'expenses').doc(doc.id).delete()};
+        li.appendChild(edit);
+        li.appendChild(del);
+      }
+
+      const det=document.createElement('div');
+      det.style.width='100%';
+      det.style.fontSize='0.85em';
+      det.style.color='#555';
+      det.textContent=d.details||'-';
+      li.appendChild(det);
+      return li;
+    }
+
+    async function handleRecurring(){
+      const collections=['members','otherIncome','expenses'];
+      const now=new Date();
+      for(const col of collections){
+        const snap=await db.collection(col).get();
+        snap.forEach(doc=>{
+          const d=doc.data();
+          if(d.recurring && d.recurring!=='none'){
+            const last=d.lastRecurrence?d.lastRecurrence.toDate():d.createdAt.toDate();
+            const nextDate=new Date(last);
+            if(d.recurring==='weekly') nextDate.setDate(nextDate.getDate()+7);
+            else if(d.recurring==='monthly') nextDate.setMonth(nextDate.getMonth()+1);
+            if(nextDate<=now){
+              const newEntry={...d, createdAt:firebase.firestore.FieldValue.serverTimestamp(), lastRecurrence:firebase.firestore.FieldValue.serverTimestamp()};
+              delete newEntry.id;
+              db.collection(col).add(newEntry);
+              db.collection(col).doc(doc.id).update({lastRecurrence:firebase.firestore.FieldValue.serverTimestamp()});
+            }
+          }
+        });
+      }
+    }
+
+    function initDashboard() {
+      handleRecurring();
+
+      db.collection('members').orderBy('createdAt').onSnapshot(snapshot=>{
+        membersList.innerHTML='';
+        let total=0;
+        let top=0;
+        let topName='-';
+        let labels=[], data=[];
+        snapshot.forEach(doc=>{
+          const d=doc.data();
+          total+=d.amount;
+          labels.push(d.name);
+          data.push(d.amount);
+          if(d.amount>top){top=d.amount; topName=d.name;}
+          membersList.appendChild(formatEntry(doc,'member'));
+        });
+        totalIncomeEl.textContent=total;
+        topContributorEl.textContent=topName;
+
+        if(membersChart) membersChart.destroy();
+        const ctx=document.getElementById('members-chart').getContext('2d');
+        membersChart=new Chart(ctx,{
+          type:'bar',
+          data:{labels,datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]},
+          options:{responsive:true}
+        });
+        updateTrendChart();
+      });
+
+      db.collection('otherIncome').orderBy('createdAt').onSnapshot(snapshot=>{
+        incomeList.innerHTML='';
+        let labels=[], data=[];
+        snapshot.forEach(doc=>{
+          const d=doc.data();
+          labels.push(d.source);
+          data.push(d.amount);
+          incomeList.appendChild(formatEntry(doc,'income'));
+        });
+        if(incomeChart) incomeChart.destroy();
+        const ctx=document.getElementById('income-chart').getContext('2d');
+        incomeChart=new Chart(ctx,{
+          type:'bar',
+          data:{labels,datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]},
+          options:{responsive:true}
+        });
+        updateTrendChart();
+      });
+
+      db.collection('expenses').orderBy('createdAt').onSnapshot(snapshot=>{
+        expenseList.innerHTML='';
+        let total=0;
+        let top=0;
+        let topName='-';
+        let labels=[], data=[];
+        snapshot.forEach(doc=>{
+          const d=doc.data();
+          total+=d.cost;
+          labels.push(d.item);
+          data.push(d.cost);
+          if(d.cost>top){top=d.cost; topName=d.item;}
+          expenseList.appendChild(formatEntry(doc,'expense'));
+        });
+        totalExpenseEl.textContent=total;
+        topExpenseEl.textContent=topName;
+
+        if(expenseChart) expenseChart.destroy();
+        const ctx=document.getElementById('expense-chart').getContext('2d');
+        expenseChart=new Chart(ctx,{
+          type:'bar',
+          data:{labels,datasets:[{label:'Cost', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]},
+          options:{responsive:true}
+        });
+        updateTrendChart();
+      });
+    }
+
+    function updateTrendChart(){
+      if(!membersChart || !incomeChart || !expenseChart) return;
+      const labels = [...new Set([...membersChart.data.labels,...incomeChart.data.labels,...expenseChart.data.labels])];
+      const memberData=labels.map(l=>{const idx=membersChart.data.labels.indexOf(l);return idx>-1?membersChart.data.datasets[0].data[idx]:0});
+      const incomeData=labels.map(l=>{const idx=incomeChart.data.labels.indexOf(l);return idx>-1?incomeChart.data.datasets[0].data[idx]:0});
+      const expenseData=labels.map(l=>{const idx=expenseChart.data.labels.indexOf(l);return idx>-1?expenseChart.data.datasets[0].data[idx]:0});
+      const ctx=document.getElementById('trend-chart').getContext('2d');
+      if(trendChart) trendChart.destroy();
+      trendChart=new Chart(ctx,{
+        type:'line',
+        data:{
+          labels,
+          datasets:[
+            {label:'Members', data:memberData, borderColor:'#06D6A0', fill:false},
+            {label:'Other Income', data:incomeData, borderColor:'#4D96FF', fill:false},
+            {label:'Expenses', data:expenseData, borderColor:'#FF6F61', fill:false}
+          ]
+        },
+        options:{responsive:true}
+      });
+      const totalIncome=memberData.reduce((a,b)=>a+b,0)+incomeData.reduce((a,b)=>a+b,0);
+      const totalExpense=expenseData.reduce((a,b)=>a+b,0);
+      totalIncomeEl.textContent=totalIncome;
+      totalExpenseEl.textContent=totalExpense;
+      balanceEl.textContent=totalIncome-totalExpense;
+    }
+
+    addMemberBtn.onclick=()=>{
+      const name=memberName.value.trim();
+      const amount=parseInt(memberAmount.value);
+      if(!name || !amount) return alert('Enter valid values');
+      db.collection('members').add({name, amount, details:memberDetails.value, recurring:memberRecurring.value, createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      memberName.value=''; memberAmount.value=''; memberDetails.value=''; memberRecurring.value='none';
+    }
+
+    addIncomeBtn.onclick=()=>{
+      const source=incomeSource.value.trim();
+      const amount=parseInt(incomeAmount.value);
+      if(!source || !amount) return alert('Enter valid values');
+      db.collection('otherIncome').add({source, amount, details:incomeDetails.value, category:incomeCategory.value, recurring:incomeRecurring.value, createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      incomeSource.value=''; incomeAmount.value=''; incomeDetails.value=''; incomeCategory.value='General'; incomeRecurring.value='none';
+    }
+
+    addExpenseBtn.onclick=()=>{
+      const item=expenseItem.value.trim();
+      const cost=parseInt(expenseCost.value);
+      if(!item || !cost) return alert('Enter valid values');
+      db.collection('expenses').add({item, cost, details:expenseDetails.value, category:expenseCategory.value, recurring:expenseRecurring.value, createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      expenseItem.value=''; expenseCost.value=''; expenseDetails.value=''; expenseCategory.value='General'; expenseRecurring.value='none';
+    }
+
+    document.getElementById('export-csv').onclick=async()=>{
+      const cols=['members','otherIncome','expenses'];
+      let csvContent='';
+      for(const col of cols){
+        const snapshot=await db.collection(col).get();
+        if(snapshot.empty) continue;
+        const keys=Object.keys(snapshot.docs[0].data());
+        csvContent+=col+'\n'+keys.join(',')+'\n';
+        snapshot.forEach(doc=>{csvContent+=keys.map(k=>doc.data()[k]).join(',')+'\n'});
+        csvContent+='\n';
+      }
+      const blob=new Blob([csvContent],{type:'text/csv;charset=utf-8;'});
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="dashboard_export.csv";
+      link.click();
+    }
   </script>
 </body>
 </html>
