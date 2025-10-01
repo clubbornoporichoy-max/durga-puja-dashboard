@@ -4,323 +4,293 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Durga Puja Dashboard</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {font-family: Arial, sans-serif; margin:0; padding:0; background:#f9f9f9;}
-    header {background:#6a1b9a; color:white; padding:20px; text-align:center;}
-    h1 {margin:0;}
-    .container {padding:20px;}
-    .grid {display:grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap:20px;}
-    .card {background:white; padding:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
-    .card h2 {margin-top:0;}
-    .list {max-height:200px; overflow-y:auto;}
-    .list div {padding:8px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;}
-    .form-group {margin-bottom:10px;}
-    label {display:block; margin-bottom:5px;}
-    input {width:100%; padding:8px; box-sizing:border-box;}
-    button {background:#6a1b9a; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer;}
-    button:hover {background:#4a148c;}
-    canvas {max-width:100%; height:300px;}
-    .summary {display:flex; justify-content:space-between; margin:20px 0;}
-    .summary div {background:#e1bee7; padding:15px; border-radius:8px; flex:1; margin:5px; text-align:center;}
-    .edit-btn, .delete-btn {background:none; border:none; cursor:pointer; margin-left:10px;}
-    .edit-btn {color:blue;}
-    .delete-btn {color:red;}
+    body { font-family: 'Poppins', sans-serif; margin: 0; background: #F7F7F7; }
+    header { background: linear-gradient(90deg, #FF6F61, #FFD166); padding: 20px; text-align: center; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;}
+    header h1 { margin: 0; font-size: 2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+    #export-import { position: absolute; top: 20px; right: 20px; display:flex; gap:10px; }
+    .container { max-width: 1200px; margin: auto; padding: 20px; }
+    section.card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
+    section.card:hover { transform: translateY(-5px); }
+    h2 { color: #333; margin-bottom: 10px; }
+    ul { list-style: none; padding: 0; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
+    li { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid #eee; align-items: center; flex-wrap:wrap; gap:5px; }
+    input, select { padding: 6px 8px; margin-right: 5px; border-radius: 6px; border: 1px solid #ccc; }
+    button { padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; }
+    .add-btn { background: #06D6A0; color: white; }
+    .edit-btn { background: orange; color: white; }
+    .delete-btn { background: red; color: white; }
+    .export-btn { background:#4D96FF; color:white;}
+    .import-btn { background:#FF6FFF; color:white;}
+    button:hover { opacity: 0.85; transform: scale(1.05); }
+    .chart-container { width: 100%; height: 300px; margin-top: 20px; }
+    .hidden { display: none; }
+    .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .flex-row > section { flex: 1 1 calc(50% - 20px); }
+    .summary-mini { display:flex; justify-content: space-between; padding:10px; border-radius:8px; background:#FFEBCD; margin-bottom:10px; font-weight:600;}
+    .details-field { width:100%; padding:5px; border-radius:5px; margin-top:3px; border:1px solid #ccc; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Durga Puja Dashboard</h1>
+    <h1>Durga Puja CLUB BORNOPORICHOY Dashboard 2025</h1>
+    <div id="export-import">
+      <button class="export-btn" id="export-csv">Export CSV</button>
+      <button class="import-btn" id="import-csv">Import CSV</button>
+    </div>
   </header>
+
   <div class="container">
-    <div class="summary">
-      <div>
-        <h3>Total Income</h3>
-        <p id="total-income">0</p>
-      </div>
-      <div>
-        <h3>Total Expenses</h3>
-        <p id="total-expense">0</p>
-      </div>
-      <div>
-        <h3>Balance</h3>
-        <p id="balance">0</p>
-      </div>
-      <div>
-        <h3>Top Contributor</h3>
-        <p id="top-contributor">-</p>
-      </div>
+    <div id="login-section">
+      <h2>Login</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
+      <button id="login-btn">Login</button>
+      <p id="login-error" style="color:red;"></p>
     </div>
 
-    <div class="grid">
-      <!-- Members -->
-      <div class="card">
-        <h2>Members Contribution</h2>
-        <div class="form-group"><label>Name</label><input type="text" id="member-name"></div>
-        <div class="form-group"><label>Amount</label><input type="number" id="member-amount"></div>
-        <button onclick="addMember()">Add Member</button>
-        <div class="list" id="members-list"></div>
-        <canvas id="members-chart"></canvas>
+    <div id="dashboard" class="hidden">
+      <div class="flex-row">
+        <section class="card">
+          <h2>Summary</h2>
+          <div class="summary-mini">Total Income: ₹<span id="total-income">0</span></div>
+          <div class="summary-mini">Total Expenses: ₹<span id="total-expense">0</span></div>
+          <div class="summary-mini">Balance: ₹<span id="balance">0</span></div>
+          <div class="summary-mini">Top Contributor: <span id="top-contributor">-</span></div>
+          <div class="summary-mini">Largest Donation: <span id="top-donation">-</span></div>
+          <div class="summary-mini">Highest Expense: <span id="top-expense">-</span></div>
+        </section>
+        <section class="card">
+          <h2>Income vs Expense Trend</h2>
+          <canvas id="trend-chart"></canvas>
+        </section>
       </div>
 
-      <!-- Other Income -->
-      <div class="card">
-        <h2>Other Income</h2>
-        <div class="form-group"><label>Source</label><input type="text" id="income-source"></div>
-        <div class="form-group"><label>Amount</label><input type="number" id="income-amount"></div>
-        <button onclick="addIncome()">Add Income</button>
-        <div class="list" id="income-list"></div>
-        <canvas id="income-chart"></canvas>
-      </div>
+      <div class="flex-row">
+        <section class="card">
+          <h2>Members Contribution</h2>
+          <ul id="members-list"></ul>
+          <div id="members-form">
+            <input type="text" id="member-name" placeholder="Name">
+            <input type="number" id="member-amount" placeholder="Amount">
+            <textarea id="member-details" placeholder="Details" class="details-field"></textarea>
+            <select id="member-recurring">
+              <option value="none">No Recurrence</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+            <button class="add-btn" id="add-member">➕ Add</button>
+          </div>
+          <div class="chart-container"><canvas id="members-chart"></canvas></div>
+        </section>
 
-      <!-- Expenses -->
-      <div class="card">
-        <h2>Expenses</h2>
-        <div class="form-group"><label>Description</label><input type="text" id="expense-desc"></div>
-        <div class="form-group"><label>Cost</label><input type="number" id="expense-cost"></div>
-        <button onclick="addExpense()">Add Expense</button>
-        <div class="list" id="expense-list"></div>
-        <canvas id="expense-chart"></canvas>
-      </div>
-    </div>
+        <section class="card">
+          <h2>Other Income</h2>
+          <ul id="income-list"></ul>
+          <div id="income-form">
+            <input type="text" id="income-source" placeholder="Source">
+            <input type="number" id="income-amount" placeholder="Amount">
+            <textarea id="income-details" placeholder="Details" class="details-field"></textarea>
+            <select id="income-category">
+              <option value="General">General</option>
+              <option value="Advertisement">Advertisement</option>
+              <option value="Donation">Donation</option>
+              <option value="Sponsorship">Sponsorship</option>
+            </select>
+            <select id="income-recurring">
+              <option value="none">No Recurrence</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+            <button class="add-btn" id="add-income">➕ Add</button>
+          </div>
+          <div class="chart-container"><canvas id="income-chart"></canvas></div>
+        </section>
 
-    <!-- Trend -->
-    <div class="card" style="margin-top:20px;">
-      <h2>Income vs Expense Trend</h2>
-      <canvas id="trend-chart"></canvas>
+        <section class="card">
+          <h2>Expenses</h2>
+          <ul id="expense-list"></ul>
+          <div id="expense-form">
+            <input type="text" id="expense-item" placeholder="Item">
+            <input type="number" id="expense-cost" placeholder="Cost">
+            <textarea id="expense-details" placeholder="Details" class="details-field"></textarea>
+            <select id="expense-category">
+              <option value="General">General</option>
+              <option value="Food">Food</option>
+              <option value="Decoration">Decoration</option>
+              <option value="Transport">Transport</option>
+              <option value="Misc">Misc</option>
+            </select>
+            <select id="expense-recurring">
+              <option value="none">No Recurrence</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+            <button class="add-btn" id="add-expense">➕ Add</button>
+          </div>
+          <div class="chart-container"><canvas id="expense-chart"></canvas></div>
+        </section>
+      </div>
     </div>
   </div>
 
   <script>
-    // Firebase Config (keep your own)
     const firebaseConfig = {
-      apiKey: "AIzaSyCuVs6jx7HiNIx25lzLgoq1B6nQqaHLHm0",
-      authDomain: "guestandcollection.firebaseapp.com",
-      projectId: "guestandcollection",
-      storageBucket: "guestandcollection.appspot.com",
-      messagingSenderId: "272278233160",
-      appId: "1:272278233160:web"
+      apiKey: "AIzaSyDO56RHOZ9rGHFo6a4O2hcYw9JLxVdfBwQ",
+      authDomain: "create-3b0f7.firebaseapp.com",
+      projectId: "create-3b0f7",
+      storageBucket: "create-3b0f7.firebasestorage.app",
+      messagingSenderId: "222954978623",
+      appId: "1:222954978623:web:fb52decc4380934998278a",
+      measurementId: "G-TZZ0KCEB1Z"
     };
+
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.firestore();
+    const YOUR_UID = "6tm3ARsrMwPsyhV5DOqQG3ZqlHv1";
 
-    const membersList=document.getElementById('members-list');
-    const incomeList=document.getElementById('income-list');
-    const expenseList=document.getElementById('expense-list');
-    const totalIncomeEl=document.getElementById('total-income');
-    const totalExpenseEl=document.getElementById('total-expense');
-    const balanceEl=document.getElementById('balance');
-    const topContributorEl=document.getElementById('top-contributor');
+    const loginSection = document.getElementById('login-section');
+    const dashboard = document.getElementById('dashboard');
+    const loginBtn = document.getElementById('login-btn');
+    const loginError = document.getElementById('login-error');
 
-    let membersChart,incomeChart,expenseChart,trendChart;
+    const membersList = document.getElementById('members-list');
+    const incomeList = document.getElementById('income-list');
+    const expenseList = document.getElementById('expense-list');
 
-    // ✅ Added running totals
-    let membersTotal = 0;
+    const memberName = document.getElementById('member-name');
+    const memberAmount = document.getElementById('member-amount');
+    const memberDetails = document.getElementById('member-details');
+    const memberRecurring = document.getElementById('member-recurring');
+    const addMemberBtn = document.getElementById('add-member');
+
+    const incomeSource = document.getElementById('income-source');
+    const incomeAmount = document.getElementById('income-amount');
+    const incomeDetails = document.getElementById('income-details');
+    const incomeCategory = document.getElementById('income-category');
+    const incomeRecurring = document.getElementById('income-recurring');
+    const addIncomeBtn = document.getElementById('add-income');
+
+    const expenseItem = document.getElementById('expense-item');
+    const expenseCost = document.getElementById('expense-cost');
+    const expenseDetails = document.getElementById('expense-details');
+    const expenseCategory = document.getElementById('expense-category');
+    const expenseRecurring = document.getElementById('expense-recurring');
+    const addExpenseBtn = document.getElementById('add-expense');
+
+    const totalIncomeEl = document.getElementById('total-income');
+    const totalExpenseEl = document.getElementById('total-expense');
+    const balanceEl = document.getElementById('balance');
+    const topContributorEl = document.getElementById('top-contributor');
+    const topDonationEl = document.getElementById('top-donation');
+    const topExpenseEl = document.getElementById('top-expense');
+
+    let currentUser = null;
+    let membersChart, incomeChart, expenseChart, trendChart;
+
+    let memberTotal = 0;
     let otherIncomeTotal = 0;
 
-    function updateTotalIncome() {
-      const total = membersTotal + otherIncomeTotal;
-      totalIncomeEl.textContent = total;
-      balanceEl.textContent = total - parseInt(totalExpenseEl.textContent || 0);
+    loginBtn.addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        currentUser = userCredential.user;
+        loginSection.classList.add('hidden');
+        dashboard.classList.remove('hidden');
+        initDashboard();
+      } catch(e) {
+        loginError.textContent = e.message;
+      }
+    });
+
+    function randomColor(i) {
+      const colors=["#FF6F61","#FFD166","#06D6A0","#4D96FF","#FF6FFF","#FFA500"];
+      return colors[i%colors.length];
     }
 
-    function randomColor(i){const colors=['#FF6F61','#6B5B95','#88B04B','#F7CAC9','#92A8D1','#955251','#B565A7']; return colors[i%colors.length];}
-
-    function formatEntry(doc,type){
+    function formatEntry(doc, type) {
       const d=doc.data();
-      const div=document.createElement('div');
-      let text='';
-      if(type==='member') text=`${d.name}: ₹${d.amount}`;
-      if(type==='income') text=`${d.source}: ₹${d.amount}`;
-      if(type==='expense') text=`${d.desc}: ₹${d.cost}`;
-      div.textContent=text;
-
-      const edit=document.createElement('button');
-      edit.textContent='✎';
-      edit.className='edit-btn';
-      edit.onclick=()=>editEntry(doc,type);
-      div.appendChild(edit);
-
-      const del=document.createElement('button');
-      del.textContent='🗑';
-      del.className='delete-btn';
-      del.onclick=()=>deleteEntry(doc.id,type);
-      div.appendChild(del);
-
-      return div;
+      let mainText='';
+      if(type==='member') mainText=`${d.name} - ₹${d.amount}`;
+      else if(type==='income') mainText=`${d.source} - ₹${d.amount}`;
+      else mainText=`${d.item} - ₹${d.cost}`;
+      const li=document.createElement('li');
+      li.textContent=mainText;
+      return li;
     }
 
-    function addMember(){
-      const name=document.getElementById('member-name').value;
-      const amount=parseInt(document.getElementById('member-amount').value);
-      if(name && amount){
-        db.collection('members').add({name,amount,createdAt:new Date()});
-        document.getElementById('member-name').value='';
-        document.getElementById('member-amount').value='';
-      }
-    }
-
-    function addIncome(){
-      const source=document.getElementById('income-source').value;
-      const amount=parseInt(document.getElementById('income-amount').value);
-      if(source && amount){
-        db.collection('otherIncome').add({source,amount,createdAt:new Date()});
-        document.getElementById('income-source').value='';
-        document.getElementById('income-amount').value='';
-      }
-    }
-
-    function addExpense(){
-      const desc=document.getElementById('expense-desc').value;
-      const cost=parseInt(document.getElementById('expense-cost').value);
-      if(desc && cost){
-        db.collection('expenses').add({desc,cost,createdAt:new Date()});
-        document.getElementById('expense-desc').value='';
-        document.getElementById('expense-cost').value='';
-      }
-    }
-
-    function editEntry(doc,type){
-      const d=doc.data();
-      if(type==='member'){
-        const newAmount=parseInt(prompt('Edit amount',d.amount));
-        if(newAmount) db.collection('members').doc(doc.id).update({amount:newAmount});
-      }
-      if(type==='income'){
-        const newAmount=parseInt(prompt('Edit amount',d.amount));
-        if(newAmount) db.collection('otherIncome').doc(doc.id).update({amount:newAmount});
-      }
-      if(type==='expense'){
-        const newCost=parseInt(prompt('Edit cost',d.cost));
-        if(newCost) db.collection('expenses').doc(doc.id).update({cost:newCost});
-      }
-    }
-
-    function deleteEntry(id,type){
-      if(confirm('Delete this entry?')){
-        if(type==='member') db.collection('members').doc(id).delete();
-        if(type==='income') db.collection('otherIncome').doc(id).delete();
-        if(type==='expense') db.collection('expenses').doc(id).delete();
-      }
-    }
-
-    // ✅ Members snapshot
-    db.collection('members').orderBy('createdAt').onSnapshot(snapshot=>{
-      membersList.innerHTML='';
-      membersTotal=0;
-      let top=0,topName='-';
-      let labels=[],data=[];
-      snapshot.forEach(doc=>{
-        const d=doc.data();
-        membersTotal+=d.amount;
-        labels.push(d.name);
-        data.push(d.amount);
-        if(d.amount>top){top=d.amount;topName=d.name;}
-        membersList.appendChild(formatEntry(doc,'member'));
-      });
-      topContributorEl.textContent=topName;
-      if(membersChart) membersChart.destroy();
-      const ctx=document.getElementById('members-chart').getContext('2d');
-      membersChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Amount',data,backgroundColor:labels.map((_,i)=>randomColor(i))}]},options:{responsive:true}});
-      updateTotalIncome();
-      updateTrendChart();
-    });
-
-    // ✅ Other income snapshot
-    db.collection('otherIncome').orderBy('createdAt').onSnapshot(snapshot=>{
-      incomeList.innerHTML='';
-      otherIncomeTotal=0;
-      let labels=[],data=[];
-      snapshot.forEach(doc=>{
-        const d=doc.data();
-        otherIncomeTotal+=d.amount;
-        labels.push(d.source);
-        data.push(d.amount);
-        incomeList.appendChild(formatEntry(doc,'income'));
-      });
-      if(incomeChart) incomeChart.destroy();
-      const ctx=document.getElementById('income-chart').getContext('2d');
-      incomeChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Amount',data,backgroundColor:labels.map((_,i)=>randomColor(i))}]},options:{responsive:true}});
-      updateTotalIncome();
-      updateTrendChart();
-    });
-
-    // Expenses snapshot
-    db.collection('expenses').orderBy('createdAt').onSnapshot(snapshot=>{
-      expenseList.innerHTML='';
-      let total=0;
-      let labels=[],data=[];
-      snapshot.forEach(doc=>{
-        const d=doc.data();
-        total+=d.cost;
-        labels.push(d.desc);
-        data.push(d.cost);
-        expenseList.appendChild(formatEntry(doc,'expense'));
-      });
-      totalExpenseEl.textContent=total;
-      balanceEl.textContent=(parseInt(totalIncomeEl.textContent||0))-total;
-      if(expenseChart) expenseChart.destroy();
-      const ctx=document.getElementById('expense-chart').getContext('2d');
-      expenseChart=new Chart(ctx,{type:'pie',data:{labels,datasets:[{data,backgroundColor:labels.map((_,i)=>randomColor(i))}]},options:{responsive:true}});
-      updateTrendChart();
-    });
-
-    // ✅ Updated Trend Chart
-    function updateTrendChart(){
-      db.collection('members').get().then(memSnap=>{
-        db.collection('otherIncome').get().then(incSnap=>{
-          db.collection('expenses').get().then(expSnap=>{
-            let dates={};
-
-            // Members
-            memSnap.forEach(doc=>{
-              const d=doc.data();
-              const date=d.createdAt?d.createdAt.toDate().toLocaleDateString():'Unknown';
-              dates[date]=(dates[date]||{income:0,expense:0});
-              dates[date].income+=d.amount;
-            });
-
-            // Other Income
-            incSnap.forEach(doc=>{
-              const d=doc.data();
-              const date=d.createdAt?d.createdAt.toDate().toLocaleDateString():'Unknown';
-              dates[date]=(dates[date]||{income:0,expense:0});
-              dates[date].income+=d.amount;
-            });
-
-            // Expenses
-            expSnap.forEach(doc=>{
-              const d=doc.data();
-              const date=d.createdAt?d.createdAt.toDate().toLocaleDateString():'Unknown';
-              dates[date]=(dates[date]||{income:0,expense:0});
-              dates[date].expense+=d.cost;
-            });
-
-            // ✅ Keep balance in sync with summary
-            const totalIncome = membersTotal + otherIncomeTotal;
-            const totalExpense = parseInt(totalExpenseEl.textContent || 0);
-            balanceEl.textContent = totalIncome - totalExpense;
-
-            const sortedDates=Object.keys(dates).sort((a,b)=>new Date(a)-new Date(b));
-            const labels=sortedDates;
-            const incomes=sortedDates.map(date=>dates[date].income);
-            const expenses=sortedDates.map(date=>dates[date].expense);
-
-            if(trendChart) trendChart.destroy();
-            const ctx=document.getElementById('trend-chart').getContext('2d');
-            trendChart=new Chart(ctx,{
-              type:'line',
-              data:{labels,datasets:[
-                {label:'Income',data:incomes,fill:false,borderColor:'#06D6A0'},
-                {label:'Expense',data:expenses,fill:false,borderColor:'#FF6F61'}
-              ]},
-              options:{responsive:true}
-            });
-          });
+    function initDashboard() {
+      db.collection('members').orderBy('createdAt').onSnapshot(snapshot=>{
+        membersList.innerHTML='';
+        memberTotal = 0;
+        let top=0, topName='-';
+        let labels=[], data=[];
+        snapshot.forEach(doc=>{
+          const d=doc.data();
+          memberTotal+=d.amount;
+          labels.push(d.name);
+          data.push(d.amount);
+          if(d.amount>top){top=d.amount; topName=d.name;}
+          membersList.appendChild(formatEntry(doc,'member'));
         });
+        topContributorEl.textContent=topName;
+        if(membersChart) membersChart.destroy();
+        const ctx=document.getElementById('members-chart').getContext('2d');
+        membersChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true}});
+        updateSummary();
       });
+
+      db.collection('otherIncome').orderBy('createdAt').onSnapshot(snapshot=>{
+        incomeList.innerHTML='';
+        otherIncomeTotal = 0;
+        let labels=[], data=[];
+        snapshot.forEach(doc=>{
+          const d=doc.data();
+          otherIncomeTotal+=d.amount;
+          labels.push(d.source);
+          data.push(d.amount);
+          incomeList.appendChild(formatEntry(doc,'income'));
+        });
+        if(incomeChart) incomeChart.destroy();
+        const ctx=document.getElementById('income-chart').getContext('2d');
+        incomeChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Amount', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true}});
+        updateSummary();
+      });
+
+      db.collection('expenses').orderBy('createdAt').onSnapshot(snapshot=>{
+        expenseList.innerHTML='';
+        let total=0, top=0, topName='-';
+        let labels=[], data=[];
+        snapshot.forEach(doc=>{
+          const d=doc.data();
+          total+=d.cost;
+          labels.push(d.item);
+          data.push(d.cost);
+          if(d.cost>top){top=d.cost; topName=d.item;}
+          expenseList.appendChild(formatEntry(doc,'expense'));
+        });
+        totalExpenseEl.textContent=total;
+        topExpenseEl.textContent=topName;
+        if(expenseChart) expenseChart.destroy();
+        const ctx=document.getElementById('expense-chart').getContext('2d');
+        expenseChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Cost', data, backgroundColor:labels.map((_,i)=>randomColor(i))}]}, options:{responsive:true}});
+        updateSummary();
+      });
+    }
+
+    function updateSummary() {
+      const totalIncome = memberTotal + otherIncomeTotal;
+      totalIncomeEl.textContent = totalIncome;
+      const expenses = parseInt(totalExpenseEl.textContent) || 0;
+      balanceEl.textContent = totalIncome - expenses;
     }
   </script>
 </body>
