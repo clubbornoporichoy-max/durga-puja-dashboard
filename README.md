@@ -1,15 +1,12 @@
-<p align="center">
-    <img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" align="center" width="30%">
-</p>
 <p align="center"><h1 align="center">DURGA-PUJA-DASHBOARD</h1></p>
 <p align="center">
 	<em><code>❯ REPLACE-ME</code></em>
 </p>
 <p align="center">
-	<img src="https://img.shields.io/github/license/clubbornoporichoy-max/durga-puja-dashboard?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
-	<img src="https://img.shields.io/github/last-commit/clubbornoporichoy-max/durga-puja-dashboard?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
-	<img src="https://img.shields.io/github/languages/top/clubbornoporichoy-max/durga-puja-dashboard?style=default&color=0080ff" alt="repo-top-language">
-	<img src="https://img.shields.io/github/languages/count/clubbornoporichoy-max/durga-puja-dashboard?style=default&color=0080ff" alt="repo-language-count">
+	<img src="https://img.shields.io/github/license/clubbornoporichoy-max/durga-puja-dashboard?style=default&logo=opensourceinitiative&logoColor=white&color=ff0000" alt="license">
+	<img src="https://img.shields.io/github/last-commit/clubbornoporichoy-max/durga-puja-dashboard?style=default&logo=git&logoColor=white&color=ff0000" alt="last-commit">
+	<img src="https://img.shields.io/github/languages/top/clubbornoporichoy-max/durga-puja-dashboard?style=default&color=ff0000" alt="repo-top-language">
+	<img src="https://img.shields.io/github/languages/count/clubbornoporichoy-max/durga-puja-dashboard?style=default&color=ff0000" alt="repo-language-count">
 </p>
 <p align="center"><!-- default option, no dependency badges. -->
 </p>
@@ -18,37 +15,37 @@
 </p>
 <br>
 
-##  Table of Contents
+## 🔗 Table of Contents
 
-- [ Overview](#-overview)
-- [ Features](#-features)
-- [ Project Structure](#-project-structure)
-  - [ Project Index](#-project-index)
-- [ Getting Started](#-getting-started)
-  - [ Prerequisites](#-prerequisites)
-  - [ Installation](#-installation)
-  - [ Usage](#-usage)
-  - [ Testing](#-testing)
-- [ Project Roadmap](#-project-roadmap)
-- [ Contributing](#-contributing)
-- [ License](#-license)
-- [ Acknowledgments](#-acknowledgments)
+- [📍 Overview](#-overview)
+- [👾 Features](#-features)
+- [📁 Project Structure](#-project-structure)
+  - [📂 Project Index](#-project-index)
+- [🚀 Getting Started](#-getting-started)
+  - [☑️ Prerequisites](#-prerequisites)
+  - [⚙️ Installation](#-installation)
+  - [🤖 Usage](#🤖-usage)
+  - [🧪 Testing](#🧪-testing)
+- [📌 Project Roadmap](#-project-roadmap)
+- [🔰 Contributing](#-contributing)
+- [🎗 License](#-license)
+- [🙌 Acknowledgments](#-acknowledgments)
 
 ---
 
-##  Overview
+## 📍 Overview
 
 <code>❯ REPLACE-ME</code>
 
 ---
 
-##  Features
+## 👾 Features
 
 <code>❯ REPLACE-ME</code>
 
 ---
 
-##  Project Structure
+## 📁 Project Structure
 
 ```sh
 └── durga-puja-dashboard/
@@ -72,7 +69,7 @@
 ```
 
 
-###  Project Index
+### 📂 Project Index
 <details open>
 	<summary><b><code>DURGA-PUJA-DASHBOARD/</code></b></summary>
 	<details> <!-- __root__ Submodule -->
@@ -155,16 +152,16 @@
 </details>
 
 ---
-##  Getting Started
+## 🚀 Getting Started
 
-###  Prerequisites
+### ☑️ Prerequisites
 
 Before getting started with durga-puja-dashboard, ensure your runtime environment meets the following requirements:
 
 - **Programming Language:** JavaScript
 
 
-###  Installation
+### ⚙️ Installation
 
 Install durga-puja-dashboard using one of the following methods:
 
@@ -186,16 +183,16 @@ echo 'INSERT-INSTALL-COMMAND-HERE'
 
 
 
-###  Usage
+### 🤖 Usage
 Run durga-puja-dashboard using the following command:
 echo 'INSERT-RUN-COMMAND-HERE'
 
-###  Testing
+### 🧪 Testing
 Run the test suite using the following command:
 echo 'INSERT-TEST-COMMAND-HERE'
 
 ---
-##  Project Roadmap
+## 📌 Project Roadmap
 
 - [X] **`Task 1`**: <strike>Implement feature one.</strike>
 - [ ] **`Task 2`**: Implement feature two.
@@ -203,7 +200,7 @@ echo 'INSERT-TEST-COMMAND-HERE'
 
 ---
 
-##  Contributing
+## 🔰 Contributing
 
 - **💬 [Join the Discussions](https://github.com/clubbornoporichoy-max/durga-puja-dashboard/discussions)**: Share your insights, provide feedback, or ask questions.
 - **🐛 [Report Issues](https://github.com/clubbornoporichoy-max/durga-puja-dashboard/issues)**: Submit bugs found or log feature requests for the `durga-puja-dashboard` project.
@@ -246,13 +243,13 @@ echo 'INSERT-TEST-COMMAND-HERE'
 
 ---
 
-##  License
+## 🎗 License
 
 This project is protected under the [SELECT-A-LICENSE](https://choosealicense.com/licenses) License. For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) file.
 
 ---
 
-##  Acknowledgments
+## 🙌 Acknowledgments
 
 - List any resources, contributors, inspiration, etc. here.
 
