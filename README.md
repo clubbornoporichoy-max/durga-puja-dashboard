@@ -97,5 +97,5 @@ const firebaseConfig = {
     measurementId: "G-XXXXXXXXXX"
 };
 
-4. **Set up Firestore Security Rules**:
+
 
