@@ -64,25 +64,23 @@ A comprehensive web application for managing Club Bornoporichoy's Durga Puja ope
 
 ## 📁 Project Structure
 club-bornoporichoy-dashboard/
-├── index.html # Main HTML entry point
+├── index.html                 # Main HTML entry point
 ├── css/
-│ ├── styles.css # Base styles and CSS variables
-│ └── components.css # Component-specific styles
+│   ├── styles.css            # Base styles and CSS variables
+│   └── components.css        # Component-specific styles
 ├── js/
-│ ├── app.js # Main application entry point
-│ ├── firebase-config.js # Firebase configuration and constants
-│ ├── utils.js # Utility functions and helpers
-│ ├── auth.js # Authentication system
-│ ├── components.js # UI components and rendering
-│ ├── modules.js # Main application modules
-│ ├── financial-tracker.js # Financial management module
-│ ├── members.js # Member management module
-│ ├── invitations.js # Invitation management module
-│ ├── village-collections.js # Village collections module
-│ └── membership-fees.js # Membership fees module
-└── README.md # Project documentation
-
-text
+│   ├── app.js                # Main application entry point
+│   ├── firebase-config.js    # Firebase configuration and constants
+│   ├── utils.js              # Utility functions and helpers
+│   ├── auth.js               # Authentication system
+│   ├── components.js         # UI components and rendering
+│   ├── modules.js            # Main application modules
+│   ├── financial-tracker.js  # Financial management module
+│   ├── members.js            # Member management module
+│   ├── invitations.js        # Invitation management module
+│   ├── village-collections.js # Village collections module
+│   └── membership-fees.js    # Membership fees module
+└── README.md                 # Project documentation
 
 ## 🚀 Quick Start
 
