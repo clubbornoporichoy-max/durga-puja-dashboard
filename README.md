@@ -63,7 +63,24 @@ A comprehensive web application for managing Club Bornoporichoy's Durga Puja ope
 - **Hosting**: Compatible with any static hosting service
 
 ## 📁 Project Structure
-
+club-bornoporichoy-dashboard/
+├── index.html
+├── css/
+│ ├── styles.css
+│ └── components.css
+├── js/
+│ ├── app.js
+│ ├── firebase-config.js
+│ ├── utils.js
+│ ├── auth.js
+│ ├── components.js
+│ ├── modules.js
+│ ├── financial-tracker.js
+│ ├── members.js
+│ ├── invitations.js
+│ ├── village-collections.js
+│ └── membership-fees.js
+└── README.md
 
 ## 🚀 Quick Start
 
