@@ -63,3 +63,39 @@ A comprehensive web application for managing Club Bornoporichoy's Durga Puja ope
 - **Hosting**: Compatible with any static hosting service
 
 ## 📁 Project Structure
+
+
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Firebase project with Firestore database
+- Basic understanding of web technologies
+
+### Installation
+
+1. **Clone or download** the project files
+
+2. **Set up Firebase project**:
+   - Create a new Firebase project at [Firebase Console](https://console.firebase.google.com)
+   - Enable Authentication (Email/Password)
+   - Create Firestore Database
+   - Get your Firebase configuration
+
+3. **Configure Firebase**:
+   - Update `js/firebase-config.js` with your Firebase project details:
+
+```javascript
+const firebaseConfig = {
+    apiKey: "your-api-key",
+    authDomain: "your-project.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "your-app-id",
+    measurementId: "G-XXXXXXXXXX"
+};
+
+4. **Set up Firestore Security Rules**:
+
