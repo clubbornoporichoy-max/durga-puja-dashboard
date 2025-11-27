@@ -29,11 +29,190 @@
         </div>
     </div>
 
+    <!-- Modal Structures -->
+    <!-- Transaction Modal -->
+    <div id="transactionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Transaction</h3>
+                <span class="close-modal" onclick="closeTransactionModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="transactionForm">
+                    <div class="form-group">
+                        <label for="memberSelect">Member:</label>
+                        <select id="memberSelect" required>
+                            <option value="">Select Member</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionAmount">Amount:</label>
+                        <input type="number" id="transactionAmount" placeholder="Enter amount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionDate">Date:</label>
+                        <input type="date" id="transactionDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="transactionType">Type:</label>
+                        <select id="transactionType" required>
+                            <option value="membership">Membership Fee</option>
+                            <option value="donation">Donation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeTransactionModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Transaction</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Upload Modal -->
+    <div id="bulkUploadModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Bulk Upload Fees</h3>
+                <span class="close-modal" onclick="closeBulkUploadModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="bulkUploadForm">
+                    <div class="form-group">
+                        <label for="uploadYear">Year:</label>
+                        <select id="uploadYear" required>
+                            <option value="">Select Year</option>
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="csvFile">Upload CSV File:</label>
+                        <input type="file" id="csvFile" accept=".csv" required>
+                        <small>CSV format: Member Name, Amount, Date, Type</small>
+                    </div>
+                    <div class="upload-preview" id="uploadPreview" style="display: none;">
+                        <h4>Preview:</h4>
+                        <div id="previewContent"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeBulkUploadModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Upload & Process</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript Files -->
     <script src="js/firebase-config.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/components.js"></script>
+    
+    <!-- Global Functions to Prevent Errors -->
+    <script>
+        // Define global functions to prevent ReferenceErrors
+        window.showTransactionModal = function() {
+            console.log("💰 Opening transaction modal...");
+            const modal = document.getElementById('transactionModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
+        };
+
+        window.showBulkUploadModal = function() {
+            console.log("📤 Opening bulk upload modal...");
+            const modal = document.getElementById('bulkUploadModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
+        };
+
+        window.closeTransactionModal = function() {
+            const modal = document.getElementById('transactionModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        window.closeBulkUploadModal = function() {
+            const modal = document.getElementById('bulkUploadModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        window.loadFeeMembersDropdown = function() {
+            console.log("🔽 Loading fee members dropdown...");
+            const yearSelect = document.getElementById('feeYearSelect');
+            const memberSelect = document.getElementById('feeMemberSelect');
+            
+            if (yearSelect && memberSelect) {
+                const selectedYear = yearSelect.value;
+                console.log(`Loading members for year: ${selectedYear}`);
+                // Implementation will be added in modules.js
+            }
+        };
+
+        // Close modals when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            // Transaction modal close
+            const transactionModal = document.getElementById('transactionModal');
+            if (transactionModal) {
+                transactionModal.addEventListener('click', function(e) {
+                    if (e.target === transactionModal) {
+                        closeTransactionModal();
+                    }
+                });
+            }
+
+            // Bulk upload modal close
+            const bulkUploadModal = document.getElementById('bulkUploadModal');
+            if (bulkUploadModal) {
+                bulkUploadModal.addEventListener('click', function(e) {
+                    if (e.target === bulkUploadModal) {
+                        closeBulkUploadModal();
+                    }
+                });
+            }
+
+            // Form submissions
+            const transactionForm = document.getElementById('transactionForm');
+            if (transactionForm) {
+                transactionForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log("Transaction form submitted");
+                    // Handle form submission
+                    closeTransactionModal();
+                });
+            }
+
+            const bulkUploadForm = document.getElementById('bulkUploadForm');
+            if (bulkUploadForm) {
+                bulkUploadForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log("Bulk upload form submitted");
+                    // Handle bulk upload
+                    closeBulkUploadModal();
+                });
+            }
+
+            // File upload preview
+            const csvFileInput = document.getElementById('csvFile');
+            if (csvFileInput) {
+                csvFileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        console.log("File selected:", file.name);
+                        // Handle file preview
+                    }
+                });
+            }
+        });
+    </script>
+    
     <script src="js/modules.js"></script>
     <script src="js/app.js"></script>
 </body>
