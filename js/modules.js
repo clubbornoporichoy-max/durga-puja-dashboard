@@ -372,22 +372,48 @@ async function loadAllData() {
 function initMembershipFeesEvents() {
     console.log("📋 Initializing membership fees events...");
     
-    // Add event listeners for fees management
-    const addFeeBtn = document.getElementById('addFeeBtn');
-    const bulkUploadBtn = document.getElementById('bulkUploadBtn');
-    
-    if (addFeeBtn) {
-        addFeeBtn.addEventListener('click', showTransactionModal);
-    }
-    
-    if (bulkUploadBtn) {
-        bulkUploadBtn.addEventListener('click', showBulkUploadModal);
-    }
-    
-    // Initialize year dropdown for fees
-    const feeYearSelect = document.getElementById('feeYearSelect');
-    if (feeYearSelect) {
-        feeYearSelect.addEventListener('change', loadFeeMembersDropdown);
+    try {
+        // Get all the buttons and elements
+        const addFeeBtn = document.getElementById('addFeeBtn');
+        const bulkUploadBtn = document.getElementById('bulkUploadBtn');
+        const feeYearSelect = document.getElementById('feeYearSelect');
+        
+        console.log("🔍 Found elements:", {
+            addFeeBtn: !!addFeeBtn,
+            bulkUploadBtn: !!bulkUploadBtn,
+            feeYearSelect: !!feeYearSelect
+        });
+        
+        // Set up event listeners for Add Fee button
+        if (addFeeBtn) {
+            console.log("✅ Setting up add fee button listener");
+            // Remove any existing inline handlers and use our function
+            addFeeBtn.onclick = null;
+            addFeeBtn.addEventListener('click', showTransactionModal);
+        } else {
+            console.log("❌ Add fee button not found");
+        }
+        
+        // Set up event listeners for Bulk Upload button
+        if (bulkUploadBtn) {
+            console.log("✅ Setting up bulk upload button listener");
+            // Remove any existing inline handlers and use our function
+            bulkUploadBtn.onclick = null;
+            bulkUploadBtn.addEventListener('click', showBulkUploadModal);
+        } else {
+            console.log("❌ Bulk upload button not found");
+        }
+        
+        // Set up event listener for year selection
+        if (feeYearSelect) {
+            console.log("✅ Setting up fee year select listener");
+            feeYearSelect.addEventListener('change', loadFeeMembersDropdown);
+        } else {
+            console.log("❌ Fee year select not found");
+        }
+        
+    } catch (error) {
+        console.error("❌ Error in initMembershipFeesEvents:", error);
     }
 }
 
