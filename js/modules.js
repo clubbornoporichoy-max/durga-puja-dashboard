@@ -17,7 +17,7 @@ function initializeDashboardModules() {
     // Initialize navigation
     initializeNavigation();
     
-    // Initialize event listeners
+    // Set up event listeners
     setupEventListeners();
     
     // Load all data
@@ -142,11 +142,11 @@ function changeGlobalYear(newYear) {
     clearCache('financial');
     
     // Reload all year-dependent data
-    loadFeeMembersDropdown();
-    loadFeeYearlySummary();
-    loadVillageCollections();
-    loadFinancialData();
-    recalcTotalCollected();
+    if (typeof loadFeeMembersDropdown === 'function') loadFeeMembersDropdown();
+    if (typeof loadFeeYearlySummary === 'function') loadFeeYearlySummary();
+    if (typeof loadVillageCollections === 'function') loadVillageCollections();
+    if (typeof loadFinancialData === 'function') loadFinancialData();
+    if (typeof recalcTotalCollected === 'function') recalcTotalCollected();
     
     // Show notification
     if (selectedYear === 'all') {
@@ -228,16 +228,9 @@ function setupEventListeners() {
     console.log('Setting up event listeners...');
     
     // Initialize membership fees events
-    initMembershipFeesEvents();
-    
-    // Initialize invitations events
-    initInvitationsEvents();
-    
-    // Initialize members events
-    initMembersEvents();
-    
-    // Initialize village collections events
-    initVillageCollectionsEvents();
+    if (typeof initMembershipFeesEvents === 'function') {
+        initMembershipFeesEvents();
+    }
     
     // Set up search functionality
     setupSearchFunctionality();
@@ -309,15 +302,16 @@ async function loadAllData() {
     console.log('Loading all data...');
     
     try {
-        await Promise.all([
-            loadInvitations(),
-            loadMembers(),
-            loadVillageCollections(),
-            updateSummaryCards(),
-            loadVillageBreakdown(),
-            loadFeeMembersDropdown(),
-            loadFeeYearlySummary()
-        ]);
+        // Load core data
+        if (typeof loadInvitations === 'function') await loadInvitations();
+        if (typeof loadMembers === 'function') await loadMembers();
+        if (typeof loadVillageCollections === 'function') await loadVillageCollections();
+        
+        // Load summaries
+        if (typeof updateSummaryCards === 'function') await updateSummaryCards();
+        if (typeof loadVillageBreakdown === 'function') await loadVillageBreakdown();
+        if (typeof loadFeeMembersDropdown === 'function') await loadFeeMembersDropdown();
+        if (typeof loadFeeYearlySummary === 'function') await loadFeeYearlySummary();
         
         console.log('All data loaded successfully');
         addActivity('All data loaded successfully', 'success');
@@ -329,149 +323,58 @@ async function loadAllData() {
     }
 }
 
-// Update summary cards
-async function updateSummaryCards() {
-    try {
-        // Total invitations
-        const invitationsSnap = await withCache('invitations', () => invitationCol.orderBy("dateAdded", "desc").get());
-        const totalInvitations = invitationsSnap.size;
-        safeSetTextContent('total-invitations', totalInvitations);
-
-        // Total members
-        const membersSnap = await withCache('members', () => membersCol.orderBy("name").get());
-        const totalMembers = membersSnap.size;
-        safeSetTextContent('total-members', totalMembers);
-
-        // Pending invitations
-        let pendingInvitations = 0;
-        invitationsSnap.forEach(doc => {
-            const data = doc.data();
-            if (!data.sent) pendingInvitations++;
-        });
-        safeSetTextContent('pending-invitations', pendingInvitations);
-
-        // Active collectors (using members)
-        safeSetTextContent('active-collectors', totalMembers);
-
-    } catch (error) {
-        console.error("Error updating summary cards:", error);
-    }
+// Placeholder functions that will be overridden by module files
+function initMembershipFeesEvents() {
+    console.log('Membership fees events placeholder');
 }
 
-// Load village breakdown
-async function loadVillageBreakdown() {
-    const breakdownContainer = document.getElementById('village-breakdown');
-    if (!breakdownContainer) return;
-    
-    try {
-        let villageTotals = {};
-        
-        if (selectedYear === 'all') {
-            // Aggregate data from all years
-            if (Object.keys(allYearsVillageData).length === 0) {
-                await loadAllYearsVillageCollections();
-            }
-            
-            Object.values(allYearsVillageData).forEach(yearData => {
-                Object.values(yearData).forEach(collection => {
-                    const village = collection.village || 'Others';
-                    villageTotals[village] = (villageTotals[village] || 0) + (collection.amount || 0);
-                });
-            });
-        } else {
-            // Single year data
-            const villageCol = villageCollectionsCollectionFor(selectedYear);
-            const snap = await villageCol.get();
-            
-            snap.forEach(doc => {
-                const d = doc.data();
-                const village = d.village || 'Others';
-                villageTotals[village] = (villageTotals[village] || 0) + (d.amount || 0);
-            });
-        }
-        
-        breakdownContainer.innerHTML = Object.entries(villageTotals)
-            .map(([village, total]) => `
-                <div class="breakdown-item">
-                    <div class="breakdown-label">${village}</div>
-                    <div class="breakdown-value">₹${total.toLocaleString()}</div>
-                </div>
-            `).join('');
-    } catch (error) {
-        console.error("Error loading village breakdown:", error);
-        breakdownContainer.innerHTML = '<div class="breakdown-item">Error loading data</div>';
-    }
+function loadFeeMembersDropdown() {
+    console.log('Loading fee members dropdown placeholder');
+}
+
+function loadFeeYearlySummary() {
+    console.log('Loading fee yearly summary placeholder');
+}
+
+function loadVillageCollections() {
+    console.log('Loading village collections placeholder');
+}
+
+function loadFinancialData() {
+    console.log('Loading financial data placeholder');
+}
+
+function recalcTotalCollected() {
+    console.log('Recalculating total collected placeholder');
+}
+
+function initializeCharts() {
+    console.log('Initializing charts placeholder');
+}
+
+function loadInvitations() {
+    console.log('Loading invitations placeholder');
+}
+
+function loadMembers() {
+    console.log('Loading members placeholder');
+}
+
+function updateSummaryCards() {
+    console.log('Updating summary cards placeholder');
+}
+
+function loadVillageBreakdown() {
+    console.log('Loading village breakdown placeholder');
 }
 
 // Quick action functions
 async function exportAllData() {
-    try {
-        addActivity('Starting data export...', 'info');
-        
-        const [invitations, members] = await Promise.all([
-            withCache('invitations', () => invitationCol.orderBy("dateAdded", "desc").get()),
-            withCache('members', () => membersCol.orderBy("name").get())
-        ]);
-        
-        // Get year-specific data
-        let fees, collections, income, expenses;
-        if (selectedYear === 'all') {
-            fees = { docs: [] };
-            collections = { docs: [] };
-            income = { docs: [] };
-            expenses = { docs: [] };
-            
-            // Aggregate all years data
-            if (Object.keys(allYearsFeesData).length === 0) {
-                await loadAllYearsFees();
-            }
-            if (Object.keys(allYearsVillageData).length === 0) {
-                await loadAllYearsVillageCollections();
-            }
-            
-            Object.values(allYearsFeesData).forEach(yearData => {
-                Object.entries(yearData).forEach(([id, data]) => {
-                    fees.docs.push({ id, data: () => data });
-                });
-            });
-            
-            Object.values(allYearsVillageData).forEach(yearData => {
-                Object.entries(yearData).forEach(([id, data]) => {
-                    collections.docs.push({ id, data: () => data });
-                });
-            });
-        } else {
-            [fees, collections, income, expenses] = await Promise.all([
-                membershipFeesCollectionFor(selectedYear).get(),
-                villageCollectionsCollectionFor(selectedYear).get(),
-                incomeCollectionFor(selectedYear).get(),
-                expenseCollectionFor(selectedYear).get()
-            ]);
-        }
-        
-        const data = {
-            invitations: invitations.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-            members: members.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-            collections: collections.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-            fees: fees.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-            income: income.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-            expenses: expenses.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        };
-        
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        downloadBlob(blob, `club-bornoporichoy-backup-${new Date().toISOString().split('T')[0]}.json`);
-        
-        showNotification('All data exported successfully!', 'success');
-        addActivity('Data exported successfully', 'success');
-    } catch (error) {
-        showNotification('Export failed: ' + error.message, 'error');
-        addActivity('Data export failed: ' + error.message, 'error');
-    }
+    showNotification('Export feature coming soon!', 'info');
 }
 
 function backupData() {
-    showNotification('Auto backup feature coming soon!', 'info');
-    addActivity('Backup triggered', 'info');
+    showNotification('Backup feature coming soon!', 'info');
 }
 
 function showAllYearsData() {
@@ -480,73 +383,6 @@ function showAllYearsData() {
 
 function showYearComparison() {
     showNotification('Year comparison feature coming soon!', 'info');
-}
-
-// Recalculate total collected
-async function recalcTotalCollected() {
-    try {
-        let totalVillage = 0;
-        let totalMembership = 0;
-        
-        // Calculate village collections
-        if (selectedYear === 'all') {
-            // Aggregate from all years
-            if (Object.keys(allYearsVillageData).length === 0) {
-                await loadAllYearsVillageCollections();
-            }
-            
-            Object.values(allYearsVillageData).forEach(yearData => {
-                Object.values(yearData).forEach(collection => {
-                    totalVillage += collection.amount || 0;
-                });
-            });
-        } else {
-            // Single year
-            const targetYear = selectedYear === 'all' ? new Date().getFullYear() : selectedYear;
-            const villageCol = villageCollectionsCollectionFor(targetYear);
-            const villageSnap = await villageCol.get();
-            villageSnap.forEach(doc => {
-                totalVillage += doc.data().amount || 0;
-            });
-        }
-        
-        // Calculate membership fees
-        if (selectedYear === 'all') {
-            // Aggregate from all years
-            Object.values(allYearsFeesData).forEach(yearData => {
-                Object.values(yearData).forEach(memberFees => {
-                    MONTHS.forEach(month => {
-                        if (memberFees[month] && memberFees[month].paid) {
-                            totalMembership += memberFees.monthlyFee || 100;
-                        }
-                    });
-                });
-            });
-        } else {
-            // Single year - calculate from monthly summary
-            const targetYear = selectedYear === 'all' ? new Date().getFullYear() : selectedYear;
-            const feesCol = membershipFeesCollectionFor(targetYear);
-            const feesSnap = await feesCol.get();
-            feesSnap.forEach(doc => {
-                const data = doc.data();
-                MONTHS.forEach(month => {
-                    if (data[month] && data[month].paid) {
-                        totalMembership += data.monthlyFee || 100;
-                    }
-                });
-            });
-        }
-        
-        const totalCollection = totalVillage + totalMembership;
-        
-    } catch (error) {
-        console.error("Recalc total collected error:", error);
-    }
-}
-
-// Update monthly summary
-async function updateMonthlySummary() {
-    await recalcTotalCollected();
 }
 
 // Export module functions
