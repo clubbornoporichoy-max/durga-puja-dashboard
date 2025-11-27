@@ -325,7 +325,25 @@ async function loadAllData() {
 
 // Placeholder functions that will be overridden by module files
 function initMembershipFeesEvents() {
-    console.log('Membership fees events placeholder');
+    console.log("📋 Initializing membership fees events...");
+    
+    // Add event listeners for fees management
+    const addFeeBtn = document.getElementById('addFeeBtn');
+    const bulkUploadBtn = document.getElementById('bulkUploadBtn');
+    
+    if (addFeeBtn) {
+        addFeeBtn.addEventListener('click', showTransactionModal);
+    }
+    
+    if (bulkUploadBtn) {
+        bulkUploadBtn.addEventListener('click', showBulkUploadModal);
+    }
+    
+    // Initialize year dropdown for fees
+    const feeYearSelect = document.getElementById('feeYearSelect');
+    if (feeYearSelect) {
+        feeYearSelect.addEventListener('change', loadFeeMembersDropdown);
+    }
 }
 
 function loadFeeMembersDropdown() {
