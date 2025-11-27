@@ -21,199 +21,464 @@
     <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
-    <!-- App container - loaded dynamically -->
-    <div id="app">
-        <div style="padding: 50px; text-align: center;">
-            <h2>Loading Club Bornoporichoy Dashboard...</h2>
-            <div class="loading-spinner" style="margin: 20px auto;"></div>
-        </div>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="logo">CB</div>
+      <div>
+        <h1>Club Bornoporichoy</h1>
+        <div class="sub">Durga Puja Dashboard</div>
+      </div>
     </div>
 
-    <!-- Modal Structures -->
-    <!-- Transaction Modal -->
-    <div id="transactionModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Transaction</h3>
-                <span class="close-modal" onclick="closeTransactionModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="transactionForm">
-                    <div class="form-group">
-                        <label for="memberSelect">Member:</label>
-                        <select id="memberSelect" required>
-                            <option value="">Select Member</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="transactionAmount">Amount:</label>
-                        <input type="number" id="transactionAmount" placeholder="Enter amount" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="transactionDate">Date:</label>
-                        <input type="date" id="transactionDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="transactionType">Type:</label>
-                        <select id="transactionType" required>
-                            <option value="membership">Membership Fee</option>
-                            <option value="donation">Donation</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="closeTransactionModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">Save Transaction</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <nav class="topbar" role="navigation" aria-label="Main navigation">
+      <a href="#invitations" id="nav-invitations" class="active">Manage Invitations</a>
+      <a href="#members" id="nav-members">Members</a>
+      <a href="#fees" id="nav-fees">Membership Fees</a>
+      <a href="#financial-tracker" id="nav-financial">Financial Tracker</a>
+      <a href="#village-collection" id="nav-village-collection">Village Collection</a>
+    </nav>
+
+    <!-- Global Year Selector -->
+    <div class="global-year-selector hidden" id="global-year-selector">
+      <label>📅 Year:</label>
+      <select id="globalYearSelect">
+        <!-- Options will be populated dynamically -->
+      </select>
     </div>
 
-    <!-- Bulk Upload Modal -->
-    <div id="bulkUploadModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Bulk Upload Fees</h3>
-                <span class="close-modal" onclick="closeBulkUploadModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="bulkUploadForm">
-                    <div class="form-group">
-                        <label for="uploadYear">Year:</label>
-                        <select id="uploadYear" required>
-                            <option value="">Select Year</option>
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="csvFile">Upload CSV File:</label>
-                        <input type="file" id="csvFile" accept=".csv" required>
-                        <small>CSV format: Member Name, Amount, Date, Type</small>
-                    </div>
-                    <div class="upload-preview" id="uploadPreview" style="display: none;">
-                        <h4>Preview:</h4>
-                        <div id="previewContent"></div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="closeBulkUploadModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">Upload & Process</button>
-                    </div>
-                </form>
-            </div>
+    <div class="auth-area">
+      <div id="user-info" class="muted" style="font-size:13px"></div>
+      <button id="logout-btn" class="btn small hidden">Logout</button>
+    </div>
+  </div>
+</header>
+
+<div class="spacer"></div>
+
+<div class="container">
+
+  <!-- Auth / Login Card -->
+  <div class="card" id="auth-card">
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div style="min-width:240px;flex:1">
+        <label class="muted">Email</label>
+        <input id="email" type="email" placeholder="admin@example.com" style="width:100%" />
+      </div>
+      <div style="min-width:220px;flex:1">
+        <label class="muted">Password</label>
+        <input id="password" type="password" placeholder="password" style="width:100%" />
+      </div>
+
+      <div style="min-width:160px">
+        <label class="muted">Select Year</label>
+        <select id="loginYearSelect" style="width:100%;">
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:20px">
+        <button id="login-btn" class="btn">Login</button>
+      </div>
+    </div>
+    <div class="muted note" style="margin-top:10px">
+      Use email/password login. Admin UID for edits: <code>fRpLuiBgU0ZE1AtVmkGaA1RhBJk2</code>
+    </div>
+  </div>
+
+  <!-- Main content (hidden until login) -->
+  <div id="main-content" class="hidden">
+
+    <!-- 1. Real-time Dashboard Summary Cards (SEPARATE PANEL) -->
+    <div class="card">
+      <h3>📊 Dashboard Overview</h3>
+      <div class="summary-cards">
+        <div class="summary-card-item">
+          <div style="font-size: 24px; font-weight: bold; color: var(--primary-red);" id="total-invitations">0</div>
+          <div style="font-size: 14px; color: var(--muted);">Total Invitations</div>
         </div>
+        <div class="summary-card-item">
+          <div style="font-size: 24px; font-weight: bold; color: var(--primary-red);" id="total-members">0</div>
+          <div style="font-size: 14px; color: var(--muted);">Total Members</div>
+        </div>
+        <div class="summary-card-item">
+          <div style="font-size: 24px; font-weight: bold; color: var(--primary-red);" id="pending-invitations">0</div>
+          <div style="font-size: 14px; color: var(--muted);">Pending Invitations</div>
+        </div>
+        <div class="summary-card-item">
+          <div style="font-size: 24px; font-weight: bold; color: var(--primary-red);" id="active-collectors">0</div>
+          <div style="font-size: 14px; color: var(--muted);">Active Collectors</div>
+        </div>
+      </div>
     </div>
 
-    <!-- JavaScript Files -->
-    <script src="js/firebase-config.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/components.js"></script>
+    <!-- Financial Overview Cards -->
+    <div class="card">
+      <h3>💰 Financial Overview (<span id="financial-year-display">2025</span>)</h3>
+      <div class="financial-overview-cards">
+        <div class="financial-card income">
+          <div style="font-size: 24px; font-weight: bold;" id="total-income">₹0</div>
+          <div style="font-size: 14px; opacity: 0.9;">Total Income</div>
+        </div>
+        <div class="financial-card expense">
+          <div style="font-size: 24px; font-weight: bold;" id="total-expenses">₹0</div>
+          <div style="font-size: 14px; opacity: 0.9;">Total Expenses</div>
+        </div>
+        <div class="financial-card net">
+          <div style="font-size: 24px; font-weight: bold;" id="net-balance">₹0</div>
+          <div style="font-size: 14px; opacity: 0.9;">Net Balance</div>
+        </div>
+        <div class="summary-card-item">
+          <div style="font-size: 24px; font-weight: bold; color: var(--accent-gold);" id="budget-utilization">0%</div>
+          <div style="font-size: 14px; color: var(--muted);">Budget Used</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Quick Actions Panel -->
+    <div class="card">
+      <h3>⚡ Quick Actions</h3>
+      <div class="quick-actions">
+        <button class="btn small" onclick="exportAllData()">📊 Export All Data</button>
+        <button class="btn small secondary" onclick="exportInvitationsBulk()">📋 Export Invitations</button>
+        <button class="btn small ghost" onclick="generateFinancialReport()">📊 Financial Report</button>
+        <button class="btn small" onclick="backupData()">💾 Backup Data</button>
+        <button class="btn small secondary" onclick="showAllYearsData()">📅 View All Years</button>
+        <button class="btn small" id="bulkUploadBtn">📤 Bulk Upload</button>
+        <button class="btn small secondary" onclick="showTransactionModal('income')">💰 Add Income</button>
+        <button class="btn small" onclick="showTransactionModal('expense')">💸 Add Expense</button>
+      </div>
+    </div>
+
+    <!-- 5. Recent Activity Feed -->
+    <div class="card">
+      <h3>🕒 Recent Activity</h3>
+      <div id="recent-activity" style="max-height: 200px; overflow-y: auto;">
+        <!-- Activity items will be added here -->
+      </div>
+    </div>
+
+    <!-- Year Information Card -->
+    <div class="card" id="year-info-card">
+      <h3>📅 Currently Viewing: <span id="current-year-display">2025</span> <span class="year-info" id="year-data-status">Loading...</span></h3>
+      <div class="subtitle" id="year-data-description">Viewing membership fees and financial data for selected year. Other data (invitations, members) shows all years.</div>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="btn small secondary" onclick="loadAllYearsFees()">🔄 Load Fees from All Years</button>
+        <button class="btn small ghost" onclick="showYearComparison()">📊 Compare Years</button>
+      </div>
+    </div>
+
+    <!-- Budget Overview Card -->
+    <div class="card" id="budget-tracker">
+      <h2>🎯 Budget Overview (<span id="budget-year-display">2025</span>)</h2>
+      <div class="subtitle">Track budget vs actual spending for Durga Puja</div>
+
+      <div class="budget-grid" id="budget-cards-container">
+        <!-- Budget cards will be populated here -->
+      </div>
+
+      <!-- Budget Progress Chart -->
+      <div style="margin-top: 20px;">
+        <canvas id="budgetChart" height="100"></canvas>
+      </div>
+    </div>
+
+    <!-- Income & Expense Tracker -->
+    <div class="card" id="financial-tracker">
+      <h2>💰 Income & Expense Tracker (<span id="financial-tracker-year-display">2025</span>)</h2>
+      <div class="subtitle">Track all Durga Puja financial transactions</div>
+
+      <!-- Quick Transaction Buttons -->
+      <div class="quick-actions" style="margin-bottom: 15px;">
+        <button class="btn small secondary" onclick="showTransactionModal('income')">➕ Add Income</button>
+        <button class="btn small" onclick="showTransactionModal('expense')">➖ Add Expense</button>
+        <button class="btn small ghost" onclick="loadFinancialData()">🔄 Refresh</button>
+      </div>
+
+      <!-- Transaction Filters -->
+      <div class="advanced-filters">
+        <select id="filter-transaction-type" onchange="filterTransactions()">
+          <option value="all">All Transactions</option>
+          <option value="income">Income Only</option>
+          <option value="expense">Expense Only</option>
+        </select>
+        <select id="filter-transaction-category" onchange="filterTransactions()">
+          <option value="all">All Categories</option>
+        </select>
+        <input type="date" id="filter-transaction-from" onchange="filterTransactions()" placeholder="From Date">
+        <input type="date" id="filter-transaction-to" onchange="filterTransactions()" placeholder="To Date">
+      </div>
+
+      <!-- Transactions Table -->
+      <table id="transactions-table" style="margin-top: 12px;">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Payment Mode</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <!-- Transaction Summary -->
+      <div style="margin-top: 15px; padding: 15px; background: var(--glass); border-radius: var(--radius);">
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <strong>Total Income:</strong> <span id="table-total-income" style="color: #28a745;">₹0</span>
+          </div>
+          <div>
+            <strong>Total Expenses:</strong> <span id="table-total-expenses" style="color: #dc3545;">₹0</span>
+          </div>
+          <div>
+            <strong>Net Balance:</strong> <span id="table-net-balance" style="color: var(--primary-red);">₹0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Invitations Table with Edit Buttons -->
+    <div class="card" id="invitations">
+      <h2>🪔 Invitation List <span class="year-info">All Years</span></h2>
+      <div class="subtitle">Add, search and track invitation card distribution (shows data from all years)</div>
+
+      <div style="display:flex;gap:12px;margin-top:12px;align-items:center">
+        <input id="search-invite" type="text" placeholder="Search invitations (name / village / mobile)..." style="flex:1" />
+        <div class="muted">Admin can add/edit/delete</div>
+      </div>
+
+      <table id="invitation-table" style="margin-top:12px">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Village</th>
+            <th>Mobile</th>
+            <th>Remarks</th>
+            <th>Sent</th>
+            <th>Date Added</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div style="margin-top:12px">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input id="inv-name" type="text" placeholder="Name" style="min-width:180px" />
+          <input id="inv-village" type="text" placeholder="Village" style="min-width:160px" />
+          <input id="inv-mobile" type="text" placeholder="Mobile No" style="min-width:140px" />
+          <input id="inv-remarks" type="text" placeholder="Remarks" style="min-width:200px" />
+          <button id="add-inv-btn" class="btn small">Add Invitation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Members Table with Edit Buttons -->
+    <div class="card" id="members">
+      <h2>🌸 Members List <span class="year-info">All Years</span></h2>
+      <div class="subtitle">Manage members — linked to membership fee tracker (shows data from all years)</div>
+
+      <div style="display:flex;gap:12px;margin-top:12px;align-items:center">
+        <input id="search-members" type="text" placeholder="Search members (name/mobile)..." style="flex:1" />
+        <div class="muted">Admin can add/edit/delete</div>
+      </div>
+
+      <table id="members-table" style="margin-top:12px">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Village</th>
+            <th>Mobile</th>
+            <th>Remarks</th>
+            <th>Date Added</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div style="margin-top:12px">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input id="mem-name" type="text" placeholder="Name" style="min-width:180px" />
+          <input id="mem-village" type="text" placeholder="Village" style="min-width:160px" />
+          <input id="mem-mobile" type="text" placeholder="Mobile No" style="min-width:140px" />
+          <input id="mem-remarks" type="text" placeholder="Remarks" style="min-width:200px" />
+          <button id="add-mem-btn" class="btn small">Add Member</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Membership Fees -->
+    <div class="card" id="fees">
+      <h2>💰 Membership Fees Tracker (<span id="fees-year-display">2025</span>)</h2>
+      <div class="subtitle">Track monthly payments (₹ per month configurable) - Year-specific data</div>
+
+      <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+        <div style="min-width:260px">
+          <label class="muted">Member</label>
+          <select id="feeMemberSelect" style="width:100%"><option value="">-- Select member --</option></select>
+        </div>
+
+        <div style="min-width:140px">
+          <label class="muted">Monthly Fee (₹)</label>
+          <input id="feeAmountInput" type="number" min="1" value="100" style="width:100%" />
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+          <button id="loadMemberFeeBtn" class="btn small">Load</button>
+          <button id="exportCsvBtn" class="btn small secondary">Export CSV</button>
+        </div>
+      </div>
+
+      <table id="fee-months-table" style="margin-top:12px">
+        <thead><tr><th>Month</th><th>Status</th><th>Paid On</th><th>Toggle (Admin)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+        <div id="fee-member-summary" class="muted">Select member to load fees</div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button id="saveFeeConfigBtn" class="btn small">Save Config</button>
+          <button id="clearFeeRecordBtn" class="btn small ghost">Clear</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <h3 style="margin:0 0 8px 0;color:var(--primary-red);font-size:15px">Yearly Summary</h3>
+        <table id="fees-yearly-summary">
+          <thead><tr><th>Month</th><th>Paid Members</th><th>Total Collected (₹)</th></tr></thead>
+        <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Enhanced Village Collection Tracker with Edit Buttons -->
+    <div class="card" id="village-collection">
+      <h2>🏘️ Village Collection Tracker (<span id="village-collection-year-display">2025</span>)</h2>
+      <div class="subtitle">Track donations per village and collector (year-specific data)</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
+        <input id="vc-bill" type="text" placeholder="Bill No" style="min-width:120px" />
+        
+        <select id="vc-collector" style="min-width:160px">
+          <option value="">-- Select Collector --</option>
+        </select>
+
+        <input id="vc-donor" type="text" placeholder="Donor Name" style="min-width:160px" />
+
+        <input id="vc-amount" type="number" placeholder="Amount (₹)" style="min-width:120px" />
+        <input id="vc-remarks" type="text" placeholder="Remarks" style="min-width:200px" />
+
+        <select id="vc-village" style="min-width:160px">
+          <option value="">-- Select Village --</option>
+          <option value="Madhabpur">Madhabpur</option>
+          <option value="Paldhui">Paldhui</option>
+          <option value="Sabitrapur">Sabitrapur</option>
+          <option value="Lalupool">Lalupool</option>
+          <option value="Mahakal">Mahakal</option>
+          <option value="Others">Others</option>
+        </select>
+
+        <button id="add-vc-btn" class="btn small">Add Collection</button>
+      </div>
+
+      <!-- Total Collection Display -->
+      <div id="vc-total-collection" class="total-collection" style="display:none;">
+        Total Village Collection: ₹<span id="vc-total-amount">0</span>
+      </div>
+
+      <!-- Village-wise Collection Breakdown -->
+      <div class="card" style="margin-top: 15px;">
+        <h3>🏘️ Village-wise Collection</h3>
+        <div id="village-breakdown" class="village-breakdown">
+          <!-- Will be populated dynamically -->
+        </div>
+      </div>
+
+      <table id="vc-table" style="margin-top:12px">
+        <thead>
+          <tr>
+            <th>Bill No</th>
+            <th>Collector</th>
+            <th>Donor Name</th>
+            <th>Amount (₹)</th>
+            <th>Remarks</th>
+            <th>Village</th>
+            <th>Date Added</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <input id="search-vc" type="text" placeholder="Search collections..." style="margin-top:12px;width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;" />
+    </div>
+
+  </div> <!-- main-content -->
+</div> <!-- container -->
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Transaction Modal -->
+<div id="transactionModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="transactionModalTitle">💰 Add Transaction</h3>
+      <button class="modal-close" onclick="closeTransactionModal()">&times;</button>
+    </div>
     
-    <!-- Global Functions to Prevent Errors -->
-    <script>
-        // Define global functions to prevent ReferenceErrors
-        window.showTransactionModal = function() {
-            console.log("💰 Opening transaction modal...");
-            const modal = document.getElementById('transactionModal');
-            if (modal) {
-                modal.style.display = 'block';
-            }
-        };
-
-        window.showBulkUploadModal = function() {
-            console.log("📤 Opening bulk upload modal...");
-            const modal = document.getElementById('bulkUploadModal');
-            if (modal) {
-                modal.style.display = 'block';
-            }
-        };
-
-        window.closeTransactionModal = function() {
-            const modal = document.getElementById('transactionModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        };
-
-        window.closeBulkUploadModal = function() {
-            const modal = document.getElementById('bulkUploadModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        };
-
-        window.loadFeeMembersDropdown = function() {
-            console.log("🔽 Loading fee members dropdown...");
-            const yearSelect = document.getElementById('feeYearSelect');
-            const memberSelect = document.getElementById('feeMemberSelect');
-            
-            if (yearSelect && memberSelect) {
-                const selectedYear = yearSelect.value;
-                console.log(`Loading members for year: ${selectedYear}`);
-                // Implementation will be added in modules.js
-            }
-        };
-
-        // Close modals when clicking outside
-        document.addEventListener('DOMContentLoaded', function() {
-            // Transaction modal close
-            const transactionModal = document.getElementById('transactionModal');
-            if (transactionModal) {
-                transactionModal.addEventListener('click', function(e) {
-                    if (e.target === transactionModal) {
-                        closeTransactionModal();
-                    }
-                });
-            }
-
-            // Bulk upload modal close
-            const bulkUploadModal = document.getElementById('bulkUploadModal');
-            if (bulkUploadModal) {
-                bulkUploadModal.addEventListener('click', function(e) {
-                    if (e.target === bulkUploadModal) {
-                        closeBulkUploadModal();
-                    }
-                });
-            }
-
-            // Form submissions
-            const transactionForm = document.getElementById('transactionForm');
-            if (transactionForm) {
-                transactionForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    console.log("Transaction form submitted");
-                    // Handle form submission
-                    closeTransactionModal();
-                });
-            }
-
-            const bulkUploadForm = document.getElementById('bulkUploadForm');
-            if (bulkUploadForm) {
-                bulkUploadForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    console.log("Bulk upload form submitted");
-                    // Handle bulk upload
-                    closeBulkUploadModal();
-                });
-            }
-
-            // File upload preview
-            const csvFileInput = document.getElementById('csvFile');
-            if (csvFileInput) {
-                csvFileInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        console.log("File selected:", file.name);
-                        // Handle file preview
-                    }
-                });
-            }
-        });
-    </script>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+      <div>
+        <label class="muted">Amount (₹)</label>
+        <input type="number" id="transaction-amount" placeholder="Enter amount" style="width: 100%;">
+      </div>
+      <div>
+        <label class="muted">Date</label>
+        <input type="date" id="transaction-date" style="width: 100%;">
+      </div>
+      <div>
+        <label class="muted">Category</label>
+        <select id="transaction-category" style="width: 100%;">
+          <!-- Categories will be populated dynamically -->
+        </select>
+      </div>
+      <div>
+        <label class="muted">Payment Mode</label>
+        <select id="transaction-payment-mode" style="width: 100%;">
+          <option value="Cash">Cash</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="UPI">UPI</option>
+          <option value="Cheque">Cheque</option>
+        </select>
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label class="muted">Description</label>
+        <textarea id="transaction-description" placeholder="Enter description..." style="width: 100%; min-height: 80px;"></textarea>
+      </div>
+    </div>
     
-    <script src="js/modules.js"></script>
-    <script src="js/app.js"></script>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button class="btn" onclick="saveTransaction()">💾 Save Transaction</button>
+      <button class="btn ghost" onclick="closeTransactionModal()">❌ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Screen reader live region -->
+<div id="sr-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<!-- JavaScript Files -->
+<script src="js/firebase-config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/modules.js"></script>
+<script src="js/app.js"></script>
+
 </body>
 </html>
