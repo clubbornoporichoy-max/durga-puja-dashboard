@@ -1,13 +1,13 @@
 /* ==================== FIREBASE CONFIGURATION ==================== */
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCuVs6jx7HiNIx25lzLgoq1B6nQqaHLHm0",
-    authDomain: "guestandcollection.firebaseapp.com",
-    projectId: "guestandcollection",
-    storageBucket: "guestandcollection.firebasestorage.app",
-    messagingSenderId: "272278233160",
-    appId: "1:272278233160:web:d6d1e6a7d58be260d9b87d",
-    measurementId: "G-B5783XTFSP"
+  apiKey: "AIzaSyD1dk_w0W0GPJh62TCyOhd-X0I75U_KN8w",
+  authDomain: "club-bornoporichoy-dash.firebaseapp.com",
+  projectId: "club-bornoporichoy-dash",
+  storageBucket: "club-bornoporichoy-dash.firebasestorage.app",
+  messagingSenderId: "906993758976",
+  appId: "1:906993758976:web:8a34dc4ff6115c21c279e5",
+  measurementId: "G-GT26E31FMP"
 };
 
 // Initialize Firebase
@@ -40,8 +40,8 @@ function expenseCollectionFor(year) {
 
 // Constants
 const ROLES = {
-    "fRpLuiBgU0ZE1AtVmkGaA1RhBJk2": "admin",
-    "898Fi5sPKHY01GUgI4iu1xS4TBR2": "viewer"
+    "V7H9ujF2muVd0ajCPWX4p1JkshI2": "admin",
+    "kDmjL2EuBvW7mBQkrxVyfcOw5B12": "viewer"
 };
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
