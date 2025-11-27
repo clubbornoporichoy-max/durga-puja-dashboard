@@ -9,9 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // Main application initialization
 async function initializeApp() {
     try {
-        // Render the application structure
-        renderAppStructure();
-        
         // Initialize authentication system
         initializeAuthSystem();
         
@@ -40,6 +37,108 @@ async function initializeApp() {
         console.error('❌ Failed to initialize application:', error);
         showErrorScreen(error);
     }
+}
+
+// Initialize collection chart
+function initCollectionChart() {
+    const ctx = document.getElementById('collectionChart');
+    if (!ctx) {
+        console.warn('Collection chart canvas not found');
+        return;
+    }
+    
+    collectionChart = new Chart(ctx.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: MONTHS,
+            datasets: [{
+                label: 'Monthly Collection (₹)',
+                data: Array(12).fill(0),
+                borderColor: '#B71C1C',
+                backgroundColor: 'rgba(183, 28, 28, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Initialize budget chart
+function initBudgetChart() {
+    const ctx = document.getElementById('budgetChart');
+    if (!ctx) return;
+    
+    budgetChart = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(BUDGET_ITEMS),
+            datasets: [
+                {
+                    label: 'Budget',
+                    data: Object.values(BUDGET_ITEMS),
+                    backgroundColor: 'rgba(183, 28, 28, 0.6)',
+                    borderColor: 'rgba(183, 28, 28, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Actual Spent',
+                    data: Array(Object.keys(BUDGET_ITEMS).length).fill(0),
+                    backgroundColor: 'rgba(212, 175, 55, 0.6)',
+                    borderColor: 'rgba(212, 175, 55, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ₹${context.raw.toLocaleString()}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value;
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
 }
 
 // Set up initial event listeners
@@ -161,38 +260,19 @@ window.addEventListener('error', function(e) {
 });
 
 // Make core functions globally available
-window.Dashboard = {
-    // Auth
-    login: handleLogin,
-    logout: handleLogout,
-    
-    // Navigation
-    navigateToSection,
-    
-    // Data management
-    loadAllData,
-    exportAllData,
-    changeGlobalYear,
-    
-    // Notifications
-    showNotification,
-    addActivity,
-    
-    // Utility
-    refreshData: () => {
-        clearCache('');
-        loadAllData();
-        loadFinancialData();
-    },
-    
-    // Debug
-    getAppState: () => ({
-        user: getCurrentUser(),
-        year: selectedYear,
-        role: currentRole,
-        cacheSize: cache.size
-    })
-};
+window.showTransactionModal = showTransactionModal;
+window.closeTransactionModal = closeTransactionModal;
+window.saveTransaction = saveTransaction;
+window.showBulkUploadModal = showBulkUploadModal;
+window.closeBulkUploadModal = closeBulkUploadModal;
+window.loadFeeMembersDropdown = loadFeeMembersDropdown;
+window.generateFinancialReport = generateFinancialReport;
+window.loadFinancialData = loadFinancialData;
+window.filterTransactions = filterTransactions;
+window.exportAllData = exportAllData;
+window.backupData = backupData;
+window.showAllYearsData = showAllYearsData;
+window.exportInvitationsBulk = exportInvitationsBulk;
 
 // Development helpers
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -214,7 +294,7 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
         
         showState: () => {
             console.log('📊 App State:', {
-                user: getCurrentUser(),
+                user: auth.currentUser,
                 year: selectedYear,
                 role: currentRole,
                 cacheEntries: Array.from(cache.keys())
