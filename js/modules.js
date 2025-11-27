@@ -1,3 +1,48 @@
+// =============================================
+// MISSING FUNCTIONS - ADD AT TOP OF modules.js
+// =============================================
+
+// Transaction Modal Function
+function showTransactionModal() {
+    console.log("💰 Opening transaction modal...");
+    // For now, just show an alert - implement modal later
+    alert("Transaction modal will be implemented soon!\nThis will allow you to add new fee transactions.");
+    
+    // TODO: Replace with actual modal implementation
+    // const modal = document.getElementById('transactionModal');
+    // if (modal) modal.style.display = 'block';
+}
+
+// Bulk Upload Modal Function
+function showBulkUploadModal() {
+    console.log("📤 Opening bulk upload modal...");
+    // For now, just show an alert - implement modal later
+    alert("Bulk upload modal will be implemented soon!\nThis will allow you to upload multiple fees at once.");
+    
+    // TODO: Replace with actual modal implementation
+    // const modal = document.getElementById('bulkUploadModal');
+    // if (modal) modal.style.display = 'block';
+}
+
+// Load Fee Members Dropdown Function
+function loadFeeMembersDropdown() {
+    console.log("🔽 Loading fee members dropdown...");
+    
+    const yearSelect = document.getElementById('feeYearSelect');
+    const memberSelect = document.getElementById('feeMemberSelect');
+    
+    if (!yearSelect || !memberSelect) {
+        console.log("❌ Fee dropdown elements not found");
+        return;
+    }
+    
+    const selectedYear = yearSelect.value;
+    console.log(`Loading members for year: ${selectedYear}`);
+    
+    // For now, just add a placeholder option
+    // TODO: Replace with actual data loading
+    memberSelect.innerHTML = '<option value="">Select Member</option>';
+}
 /* ==================== MAIN APPLICATION MODULES ==================== */
 
 // Global variables
